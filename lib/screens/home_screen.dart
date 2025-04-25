@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
-import 'package:go_router/go_router.dart';
 import 'package:ReadRift/screens/dock.dart';
 
 class HomeScreen extends StatefulWidget {
