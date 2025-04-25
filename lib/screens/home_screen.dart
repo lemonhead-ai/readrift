@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
 class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,7 +21,8 @@ class HomeScreen extends StatelessWidget {
                   Text(
                     "Wed",
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: Colors.orange, fontFamily: 'ComicSansMS',
+                      color: Colors.orange,
+                      fontFamily: 'ComicSansMS',
                     ),
                   ),
                   Text(
@@ -53,14 +56,14 @@ class HomeScreen extends StatelessWidget {
 
               // Book Covers
               SizedBox(
-                height: 320, // Increased height to accommodate staggered layout
+                height: 320,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
                     // Book 1 (Top-left)
                     Positioned(
                       left: 20,
-                      top: 0, // At the top
+                      top: 0,
                       child: Transform.rotate(
                         angle: math.pi / 24,
                         child: BookCard(
@@ -71,7 +74,7 @@ class HomeScreen extends StatelessWidget {
                     // Book 2 (Pushed down, overlaps Book 1)
                     Positioned(
                       left: 90,
-                      top: 90, // Pushed down to half the height of Book 1 (180 / 2 = 90)
+                      top: 90,
                       child: Transform.rotate(
                         angle: -math.pi / 24,
                         child: BookCard(
@@ -82,7 +85,7 @@ class HomeScreen extends StatelessWidget {
                     // Book 3 (Top-right)
                     Positioned(
                       right: 90,
-                      top: 0, // At the top
+                      top: 0,
                       child: Transform.rotate(
                         angle: math.pi / 24,
                         child: BookCard(
@@ -93,7 +96,7 @@ class HomeScreen extends StatelessWidget {
                     // Book 4 (Pushed down, overlaps Book 3)
                     Positioned(
                       right: 20,
-                      top: 90, // Pushed down to half the height of Book 3
+                      top: 90,
                       child: Transform.rotate(
                         angle: -math.pi / 24,
                         child: BookCard(
@@ -112,7 +115,7 @@ class HomeScreen extends StatelessWidget {
                   children: [
                     TextSpan(
                       text: "You're currently reading ",
-                      style: Theme.of(context).textTheme.bodyLarge ?.copyWith(fontWeight: FontWeight.bold),
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     TextSpan(
                       text: "Hooked",
@@ -122,9 +125,8 @@ class HomeScreen extends StatelessWidget {
                           ?.copyWith(fontWeight: FontWeight.bold, color: Colors.orange),
                     ),
                     TextSpan(
-                      text:
-                      ". You have 📚 ",
-                      style: Theme.of(context).textTheme.bodyLarge ?.copyWith(fontWeight: FontWeight.bold),
+                      text: ". You have 📚 ",
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     TextSpan(
                       text: "4 books ",
@@ -135,7 +137,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                     TextSpan(
                       text: "in progress. You're free to read for 🕒 ",
-                      style: Theme.of(context).textTheme.bodyLarge ?.copyWith(fontWeight: FontWeight.bold),
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     TextSpan(
                       text: "45 mins",
@@ -145,8 +147,8 @@ class HomeScreen extends StatelessWidget {
                           ?.copyWith(fontWeight: FontWeight.bold, color: Colors.orange),
                     ),
                     TextSpan(
-                      text: "after 8 PM.",
-                      style: Theme.of(context).textTheme.bodyLarge ?.copyWith(fontWeight: FontWeight.bold),
+                      text: " after 8 PM.",
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -183,17 +185,17 @@ class HomeScreen extends StatelessWidget {
                 color: Theme.of(context)
                     .bottomNavigationBarTheme
                     .backgroundColor
-                    ?.withOpacity(0.9),
+                    ?.withValues(alpha: 0.9), // Replaced withOpacity with withValues
                 borderRadius: BorderRadius.circular(60.0),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withValues(alpha: 0.2),
                     blurRadius: 30,
                     offset: Offset(0, 10),
                   ),
                 ],
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   width: 1.0,
                 ),
               ),
@@ -222,7 +224,7 @@ class HomeScreen extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: isSelected
             ? BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           shape: BoxShape.circle,
         )
             : null,
@@ -242,7 +244,7 @@ class HomeScreen extends StatelessWidget {
 class BookCard extends StatelessWidget {
   final String imagePath;
 
-  const BookCard({required this.imagePath});
+  const BookCard({super.key, required this.imagePath});
 
   @override
   Widget build(BuildContext context) {
