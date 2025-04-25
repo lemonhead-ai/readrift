@@ -1,246 +1,312 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'package:go_router/go_router.dart';
+import 'package:ReadRift/screens/dock.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _selectedIndex = 0;
+
+  void _onNavIconTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Wed",
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: Colors.orange,
-                      fontFamily: 'ComicSansMS',
-                    ),
-                  ),
-                  Text(
-                    "November 20\n               2024",
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-              SizedBox(height: 8),
-              Row(
-                children: [
-                  Text(
-                    "Hello, ",
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  Text(
-                    "Emerald.",
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: Colors.orange,
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  Icon(
-                    Icons.lock,
-                    size: 20,
-                    color: Theme.of(context).textTheme.bodyMedium?.color,
-                  ),
-                ],
-              ),
-              SizedBox(height: 24),
-
-              // Book Covers
-              SizedBox(
-                height: 320,
-                child: Stack(
-                  alignment: Alignment.center,
+      body: Stack(
+        children: [
+          SafeArea(
+            bottom: false,
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Book 1 (Top-left)
-                    Positioned(
-                      left: 20,
-                      top: 0,
-                      child: Transform.rotate(
-                        angle: math.pi / 24,
-                        child: BookCard(
-                          imagePath: "assets/1984.png",
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Wed",
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            color: Colors.orange,
+                            fontSize: 55,
+                            fontFamily: 'SF Pro Rounded',
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
+                        Text(
+                          "April 23\n 2025",
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).textTheme.bodyMedium?.color,
+                            fontFamily: 'SF Pro Rounded',
+                          ),
+                          textAlign: TextAlign.right,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Text(
+                          "Hello, ",
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).textTheme.bodyMedium?.color,
+                          ),
+                        ),
+                        Icon(
+                          Icons.account_circle_outlined,
+                          size: 35,
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
+                        ),
+                        Text(
+                          " Martin",
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            color: Colors.orange,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    SizedBox(
+                      height: 300,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Positioned(
+                            left: 10,
+                            top: 0,
+                            child: Transform.rotate(
+                              angle: math.pi / 24,
+                              child: const BookCard(
+                                imagePath: "assets/1984.png",
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            left: 80,
+                            top: 90,
+                            child: Transform.rotate(
+                              angle: -math.pi / 24,
+                              child: const BookCard(
+                                imagePath: "assets/atomic_habits.png",
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            right: 80,
+                            top: 0,
+                            child: Transform.rotate(
+                              angle: math.pi / 24,
+                              child: const BookCard(
+                                imagePath: "assets/harry_potter.png",
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            right: 10,
+                            top: 90,
+                            child: Transform.rotate(
+                              angle: -math.pi / 24,
+                              child: const BookCard(
+                                imagePath: "assets/hooked.png",
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    // Book 2 (Pushed down, overlaps Book 1)
-                    Positioned(
-                      left: 90,
-                      top: 90,
-                      child: Transform.rotate(
-                        angle: -math.pi / 24,
-                        child: BookCard(
-                          imagePath: "assets/atomic_habits.png",
-                        ),
+                    const SizedBox(height: 24),
+
+                    Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: "You're currently reading ",
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(
+                            text: "Hooked",
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyLarge
+                                ?.copyWith(fontWeight: FontWeight.bold, color: Colors.orange),
+                          ),
+                          TextSpan(
+                            text: ". You have 📚 ",
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(
+                            text: "4 books ",
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyLarge
+                                ?.copyWith(fontWeight: FontWeight.bold, color: Colors.orange),
+                          ),
+                          TextSpan(
+                            text: "in progress. You're free to read for 🕒 ",
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          TextSpan(
+                            text: "45 mins",
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyLarge
+                                ?.copyWith(fontWeight: FontWeight.bold, color: Colors.orange),
+                          ),
+                          TextSpan(
+                            text: " after 8 PM.",
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
                     ),
-                    // Book 3 (Top-right)
-                    Positioned(
-                      right: 90,
-                      top: 0,
-                      child: Transform.rotate(
-                        angle: math.pi / 24,
-                        child: BookCard(
-                          imagePath: "assets/harry_potter.png",
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Text(
+                          "⌛ 5 Hours",
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
+                        const SizedBox(width: 16),
+                        Text(
+                          "📈 15% into Hooked",
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Continue Reading Section
+                    Text(
+                      "Continue reading",
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
                       ),
                     ),
-                    // Book 4 (Pushed down, overlaps Book 3)
-                    Positioned(
-                      right: 20,
-                      top: 90,
-                      child: Transform.rotate(
-                        angle: -math.pi / 24,
-                        child: BookCard(
-                          imagePath: "assets/hooked.png",
-                        ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 225, // Match the book cover height to constrain the Stack
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          // Overlapping Container with Reading Progress (below the book cover)
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            top: 50,
+                            bottom: 0,
+                            child: Container(
+                              padding: const EdgeInsets.fromLTRB(180, 16, 16, 16), // Push content to the right of the book cover
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).brightness == Brightness.light
+                                    ? Colors.grey[300]
+                                    : Colors.grey[800],
+                                borderRadius: BorderRadius.circular(34),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "Reading now",
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    "15%",
+                                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    "- 5 hours left",
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  LinearProgressIndicator(
+                                    borderRadius: BorderRadius.circular(20),
+                                    value: 0.15,
+                                    backgroundColor: Colors.grey[300],
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Theme.of(context).brightness == Brightness.light
+                                          ? Colors.black
+                                          : Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          // Book Cover (on top of the container)
+                          Positioned(
+                            left: 10,
+                            bottom: 10,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(24),
+                              child: Container(
+                                width: 160,
+                                height: 225,
+                                decoration: BoxDecoration(
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Theme.of(context).brightness == Brightness.light
+                                          ? Colors.black12
+                                          : Colors.white12,
+                                      blurRadius: 8,
+                                      offset: const Offset(2, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Image.asset(
+                                  "assets/hooked.png",
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                    const SizedBox(height: 120), // Extra space to ensure content scrolls behind dock
                   ],
                 ),
-              ),
-              SizedBox(height: 24),
-
-              // Progress
-              Text.rich(
-                TextSpan(
-                  children: [
-                    TextSpan(
-                      text: "You're currently reading ",
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    TextSpan(
-                      text: "Hooked",
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyLarge
-                          ?.copyWith(fontWeight: FontWeight.bold, color: Colors.orange),
-                    ),
-                    TextSpan(
-                      text: ". You have 📚 ",
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    TextSpan(
-                      text: "4 books ",
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyLarge
-                          ?.copyWith(fontWeight: FontWeight.bold, color: Colors.orange),
-                    ),
-                    TextSpan(
-                      text: "in progress. You're free to read for 🕒 ",
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    TextSpan(
-                      text: "45 mins",
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyLarge
-                          ?.copyWith(fontWeight: FontWeight.bold, color: Colors.orange),
-                    ),
-                    TextSpan(
-                      text: " after 8 PM.",
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 8),
-              Row(
-                children: [
-                  Text(
-                    "⌛ 5 Hours",
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  SizedBox(width: 16),
-                  Text(
-                    "📈 15% into Hooked",
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-
-      // Apple-style bottom navigation dock
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 25.0),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(60.0),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              height: 90,
-              decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .bottomNavigationBarTheme
-                    .backgroundColor
-                    ?.withValues(alpha: 0.9), // Replaced withOpacity with withValues
-                borderRadius: BorderRadius.circular(60.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 30,
-                    offset: Offset(0, 10),
-                  ),
-                ],
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  width: 1.0,
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildNavIcon(Icons.home_max_rounded, isSelected: true, context: context),
-                  _buildNavIcon(Icons.search_rounded, context: context),
-                  _buildNavIcon(Icons.menu_book_rounded, context: context),
-                  _buildNavIcon(Icons.person_outline_rounded, context: context),
-                ],
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavIcon(IconData icon, {bool isSelected = false, required BuildContext context}) {
-    return GestureDetector(
-      onTap: () {
-        // Handle tap logic here
-      },
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: isSelected
-            ? BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          shape: BoxShape.circle,
-        )
-            : null,
-        child: Icon(
-          icon,
-          size: 30,
-          color: isSelected
-              ? Theme.of(context).bottomNavigationBarTheme.selectedItemColor
-              : Theme.of(context).bottomNavigationBarTheme.unselectedItemColor,
-        ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Dock(
+              selectedIndex: _selectedIndex,
+              onItemTapped: _onNavIconTapped,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-// 📚 Custom Widget for Book Cards
 class BookCard extends StatelessWidget {
   final String imagePath;
 
@@ -249,7 +315,7 @@ class BookCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 8),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: Container(
@@ -262,7 +328,7 @@ class BookCard extends StatelessWidget {
                     ? Colors.black12
                     : Colors.white12,
                 blurRadius: 8,
-                offset: Offset(2, 2),
+                offset: const Offset(2, 2),
               ),
             ],
           ),
