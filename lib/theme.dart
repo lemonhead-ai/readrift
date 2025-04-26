@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart'; // Add this import
+import 'package:google_fonts/google_fonts.dart';
 
 // Define custom colors for consistency
 class AppColors {
   // Light mode colors
-  static const Color lightBackground = Color(0xFFF5F5F5);
+  static const Color warmWhite = Color(0xFFFFF8E1); // Warm white for background
   static const Color lightText = Colors.black;
   static const Color lightSecondaryText = Colors.black54;
-  static const Color accentOrange = Colors.orange;
+  static const Color accentOrange = Color(0xFFFF6200); // Updated to match the specified orange
   static const Color lightDockBackground = Color(0xFF212121); // Dark background for light mode dock
   static const Color lightDockIcon = Colors.white;
 
@@ -23,24 +23,38 @@ class AppColors {
 ThemeData lightTheme() {
   return ThemeData(
     brightness: Brightness.light,
-    scaffoldBackgroundColor: AppColors.lightBackground,
-    textTheme: GoogleFonts.poppinsTextTheme().copyWith( // Add Poppins font here
+    scaffoldBackgroundColor: AppColors.warmWhite, // Updated to warm white
+    textTheme: GoogleFonts.poppinsTextTheme().copyWith(
+      headlineLarge: TextStyle(
+        fontSize: 32, // Adjusted for "The story begins here."
+        fontWeight: FontWeight.bold,
+        color: AppColors.lightText,
+      ),
       headlineMedium: TextStyle(
-        fontSize: 36,
+        fontSize: 28,
         fontWeight: FontWeight.bold,
         color: AppColors.lightText,
       ),
       bodyLarge: TextStyle(
-        fontSize: 24,
+        fontSize: 18, // Adjusted for better readability
         color: AppColors.lightText,
       ),
       bodyMedium: TextStyle(
-        fontSize: 16,
+        fontSize: 14, // Adjusted for secondary text
         color: AppColors.lightSecondaryText,
       ),
     ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.accentOrange,
+        foregroundColor: AppColors.warmWhite, // Text/icon color for buttons
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    ),
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor: AppColors.lightDockBackground,
       selectedItemColor: AppColors.accentOrange,
       unselectedItemColor: AppColors.lightDockIcon,
     ),
@@ -53,25 +67,39 @@ ThemeData darkTheme() {
   return ThemeData(
     brightness: Brightness.dark,
     scaffoldBackgroundColor: AppColors.darkBackground,
-    textTheme: GoogleFonts.poppinsTextTheme().copyWith( // Add Poppins font here
+    textTheme: GoogleFonts.poppinsTextTheme().copyWith(
+      headlineLarge: TextStyle(
+        fontSize: 32,
+        fontWeight: FontWeight.bold,
+        color: AppColors.darkText,
+      ),
       headlineMedium: TextStyle(
-        fontSize: 36,
+        fontSize: 28,
         fontWeight: FontWeight.bold,
         color: AppColors.darkText,
       ),
       bodyLarge: TextStyle(
-        fontSize: 24,
+        fontSize: 18,
         color: AppColors.darkText,
       ),
       bodyMedium: TextStyle(
-        fontSize: 16,
+        fontSize: 14,
         color: AppColors.darkSecondaryText,
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.accentOrange,
+        foregroundColor: AppColors.warmWhite,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
     ),
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
       backgroundColor: AppColors.darkDockBackground,
-      selectedItemColor: AppColors.darkDockIcon,
-      unselectedItemColor: AppColors.darkSecondaryText,
+      selectedItemColor: AppColors.accentOrange,
+      unselectedItemColor: AppColors.darkDockIcon,
     ),
     iconTheme: IconThemeData(color: AppColors.darkText),
   );

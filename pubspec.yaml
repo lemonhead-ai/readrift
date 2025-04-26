@@ -49,6 +49,7 @@ flutter:
     - assets/rich_dad.png
     - assets/subtle_art.png
     - assets/the_alchemist.png
+    - assets/welcome_illustration.png
     # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
@@ -65,20 +66,26 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-
   fonts:
-     - family: SF Pro Rounded
-       fonts:
-         - asset: fonts/SF-Pro-Rounded-Semibold.otf
+    - family: SFProRounded
+      fonts:
+        - asset: fonts/SF-Pro-Rounded-Semibold.otf
+
+    - family: FuturaPT
+      fonts:
+        - asset: fonts/futura-pt-extrabold.otf
+          weight: 800
+        - asset: fonts/Futura-Medium.otf
+          weight: 500
+
+
+
   #     fonts:
   #       - asset: fonts/Schyler-Regular.ttf
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
   #       - asset: fonts/TrajanPro.ttf
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
-  #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

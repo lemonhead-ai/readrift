@@ -211,6 +211,71 @@ class _SearchScreenState extends State<SearchScreen> {
                             context.go('/');
                           },
                         ),
+                        Expanded(
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).brightness == Brightness.light
+                                  ? AppColors.lightDockBackground.withValues(alpha: 0.3)
+                                  : AppColors.darkDockBackground.withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(100),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.1),
+                                width: 1.0,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 30,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.search_rounded,
+                                  color: Theme.of(context).brightness == Brightness.light
+                                      ? AppColors.lightSecondaryText
+                                      : AppColors.darkSecondaryText,
+                                ),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _searchController,
+                                    focusNode: _searchFocusNode,
+                                    decoration: InputDecoration(
+                                      hintText: "Search for books...",
+                                      border: InputBorder.none,
+                                      hintStyle: TextStyle(
+                                        color: Theme.of(context).brightness == Brightness.light
+                                            ? AppColors.lightSecondaryText
+                                            : AppColors.darkSecondaryText,
+                                      ),
+                                    ),
+                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      color: Theme.of(context).brightness == Brightness.light
+                                          ? AppColors.lightText
+                                          : AppColors.darkText,
+                                    ),
+                                    onChanged: _onSearchChanged,
+                                  ),
+                                ),
+                                if (_isSearching)
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.clear,
+                                      color: Theme.of(context).brightness == Brightness.light
+                                          ? AppColors.lightSecondaryText
+                                          : AppColors.darkSecondaryText,
+                                    ),
+                                    onPressed: _clearSearch,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
                         IconButton(
                           icon: Icon(
                             Icons.account_circle_outlined,
@@ -224,17 +289,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      "Search",
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).brightness == Brightness.light
-                            ? AppColors.lightText
-                            : AppColors.darkText,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 10),
                     if (_isSearching && searchResults.isEmpty)
                       Container(
                         alignment: Alignment.center,
@@ -258,15 +313,15 @@ class _SearchScreenState extends State<SearchScreen> {
                       Text(
                         "Recent Searches",
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w400,
                           color: Theme.of(context).brightness == Brightness.light
                               ? AppColors.lightText
                               : AppColors.darkText,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 2),
                       SizedBox(
-                        height: 40,
+                        height: 36,
                         child: ListView(
                           scrollDirection: Axis.horizontal,
                           children: [
@@ -277,11 +332,11 @@ class _SearchScreenState extends State<SearchScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 10),
                       Text(
                         "Recommendations",
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w400,
                           color: Theme.of(context).brightness == Brightness.light
                               ? AppColors.lightText
                               : AppColors.darkText,
@@ -320,74 +375,6 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
             ),
           ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 120.0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.light
-                      ? AppColors.lightDockBackground.withValues(alpha: 0.3)
-                      : AppColors.darkDockBackground.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    width: 1.0,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 30,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.search_rounded,
-                      color: Theme.of(context).brightness == Brightness.light
-                          ? AppColors.lightSecondaryText
-                          : AppColors.darkSecondaryText,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        focusNode: _searchFocusNode,
-                        decoration: InputDecoration(
-                          hintText: "Search for books...",
-                          border: InputBorder.none,
-                          hintStyle: TextStyle(
-                            color: Theme.of(context).brightness == Brightness.light
-                                ? AppColors.lightSecondaryText
-                                : AppColors.darkSecondaryText,
-                          ),
-                        ),
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).brightness == Brightness.light
-                              ? AppColors.lightText
-                              : AppColors.darkText,
-                        ),
-                        onChanged: _onSearchChanged,
-                      ),
-                    ),
-                    if (_isSearching)
-                      IconButton(
-                        icon: Icon(
-                          Icons.clear,
-                          color: Theme.of(context).brightness == Brightness.light
-                              ? AppColors.lightSecondaryText
-                              : AppColors.darkSecondaryText,
-                        ),
-                        onPressed: _clearSearch,
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
           if (!_isSearchFocused)
             Align(
               alignment: Alignment.bottomCenter,
@@ -407,13 +394,13 @@ class _SearchScreenState extends State<SearchScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Theme.of(context).brightness == Brightness.light
-            ? AppColors.lightDockBackground.withValues(alpha: 0.1)
-            : AppColors.darkDockBackground.withValues(alpha: 0.1),
+            ? AppColors.lightDockBackground.withOpacity(0.1)
+            : AppColors.darkDockBackground.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: Theme.of(context).brightness == Brightness.light
-              ? AppColors.lightSecondaryText.withValues(alpha: 0.1)
-              : AppColors.darkSecondaryText.withValues(alpha: 0.1),
+              ? AppColors.lightSecondaryText.withOpacity(0.3)
+              : AppColors.darkSecondaryText.withOpacity(0.3),
         ),
       ),
       child: Text(
@@ -433,8 +420,8 @@ class _SearchScreenState extends State<SearchScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Theme.of(context).brightness == Brightness.light
-            ? AppColors.lightDockBackground.withValues(alpha: 0.1)
-            : AppColors.darkDockBackground.withValues(alpha: 0.1),
+            ? AppColors.lightDockBackground.withOpacity(0.1)
+            : AppColors.darkDockBackground.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -509,7 +496,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      "Available Locally",
+                      "Available",
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.white,
                         fontSize: 12,
@@ -529,7 +516,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
               ),
               child: Text(
-                "Download",
+                "GET",
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Colors.white,
                 ),

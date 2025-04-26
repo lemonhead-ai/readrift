@@ -40,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             color: Colors.orange,
                             fontSize: 55,
-                            fontFamily: 'SF Pro Rounded',
+                            fontFamily: 'SFProRounded',
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -48,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           "April 23\n 2025",
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: Theme.of(context).textTheme.bodyMedium?.color,
-                            fontFamily: 'SF Pro Rounded',
+                            fontFamily: 'SFProRounded',
                           ),
                           textAlign: TextAlign.right,
                         ),
