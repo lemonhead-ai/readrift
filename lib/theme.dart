@@ -7,7 +7,7 @@ class AppColors {
   static const Color warmWhite = Color(0xFFFFF8E1); // Warm white for background
   static const Color lightText = Colors.black;
   static const Color lightSecondaryText = Colors.black54;
-  static const Color accentOrange = Color(0xFFFF6200); // Updated to match the specified orange
+  static const Color accentOrange = Color(0xFFFC9600); // Updated to match the specified orange
   static const Color lightDockBackground = Color(0xFF212121); // Dark background for light mode dock
   static const Color lightDockIcon = Colors.white;
 

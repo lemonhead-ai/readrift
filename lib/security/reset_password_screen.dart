@@ -1,6 +1,8 @@
+import 'package:ReadRift/security/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ReadRift/theme.dart';
+
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -11,7 +13,9 @@ class ResetPasswordScreen extends StatefulWidget {
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final TextEditingController _emailController = TextEditingController();
+  final AuthService _authService = AuthService();
   bool _isLinkSent = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -19,14 +23,42 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     super.dispose();
   }
 
-  void _sendResetLink() {
-    // Simulate sending a reset link
+  Future<void> _sendResetLink() async {
     setState(() {
-      _isLinkSent = true;
+      _isLoading = true;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Password reset link sent to ${_emailController.text}")),
-    );
+
+    String email = _emailController.text.trim();
+
+    // Basic input validation
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter your email")),
+      );
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
+    String? error = await _authService.sendPasswordResetEmail(email);
+
+    setState(() {
+      _isLoading = false;
+      if (error == null) {
+        _isLinkSent = true;
+      }
+    });
+
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Password reset link sent to $email")),
+      );
+    }
   }
 
   @override
@@ -108,7 +140,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       ),
                       const SizedBox(height: 32),
                       Center(
-                        child: ElevatedButton(
+                        child: _isLoading
+                            ? const CircularProgressIndicator()
+                            : ElevatedButton(
                           onPressed: _sendResetLink,
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),

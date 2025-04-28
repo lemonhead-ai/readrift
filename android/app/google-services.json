@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1082057100474",
+    "project_id": "readrift-2025",
+    "storage_bucket": "readrift-2025.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1082057100474:android:7eb3c99a5d75e5ac450683",
+        "android_client_info": {
+          "package_name": "com.example.elevens"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyByLsKo5mKX247M8aDr04GjytCvVmgr8cc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

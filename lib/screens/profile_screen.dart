@@ -1,7 +1,12 @@
 import 'dart:ui';
+import 'package:ReadRift/security/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ReadRift/screens/dock.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -12,6 +17,8 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   int _selectedIndex = 3;
+  final AuthService _authService = AuthService();
+  final ImagePicker _picker = ImagePicker();
 
   void _onNavIconTapped(int index) {
     setState(() {
@@ -19,185 +26,266 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
+  Future<void> _pickProfilePhoto() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      File photoFile = File(image.path);
+      String? error = await _authService.updateProfilePhoto(photoFile);
+      if (error == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Profile photo updated successfully!")),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error)),
+        );
+      }
+    }
+  }
+
+  Future<void> _signOut() async {
+    await _authService.signOut();
+    // Navigation to /welcome is handled by GoRouter's redirect
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          SafeArea(
-            bottom: false, // Allow content to extend to the bottom
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            Icons.arrow_back,
-                            color: Theme.of(context).textTheme.bodyMedium?.color,
-                          ),
-                          onPressed: () {
-                            context.go('/');
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.logout,
-                            color: Colors.red,
-                          ),
-                          onPressed: () {
-                            // Logout logic to be implemented later
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
+    final user = _authService.currentUser;
 
-                    Center(
-                      child: Column(
-                        children: [
-                          Container(
-                            width: 100,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.grey[300],
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Theme.of(context).brightness == Brightness.light
-                                      ? Colors.black12
-                                      : Colors.white12,
-                                  blurRadius: 8,
-                                  offset: const Offset(2, 2),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.person,
-                              size: 50,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            "Martin",
-                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).textTheme.bodyMedium?.color,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text.rich(
-                            TextSpan(
+    if (user == null) {
+      return const Scaffold(
+        body: Center(child: Text("No user logged in")),
+      );
+    }
+
+    return StreamBuilder<User?>(
+      stream: _authService.authStateChanges,
+      builder: (context, authSnapshot) {
+        if (authSnapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final authUser = authSnapshot.data;
+        if (authUser == null) {
+          return const Scaffold(
+            body: Center(child: Text("No user logged in")),
+          );
+        }
+
+        return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          stream: _authService.getUserDataStream(authUser.uid),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            if (!snapshot.hasData || snapshot.data?.data() == null) {
+              return const Scaffold(
+                body: Center(child: Text("User data not found")),
+              );
+            }
+
+            final userData = snapshot.data!.data()!;
+            final username = userData['username'] ?? "User";
+            final photoUrl = authUser.photoURL;
+
+            return Scaffold(
+              body: Stack(
+                children: [
+                  SafeArea(
+                    bottom: false,
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                TextSpan(
-                                  text: "You're rock! ",
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Colors.grey,
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.arrow_back,
+                                    color: Theme.of(context).textTheme.bodyMedium?.color,
                                   ),
+                                  onPressed: () {
+                                    context.go('/');
+                                  },
                                 ),
-                                TextSpan(
-                                  text: "You've finished last book in 3 days 🔥",
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Colors.grey,
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.logout,
+                                    color: Colors.red,
                                   ),
+                                  onPressed: _signOut,
                                 ),
                               ],
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
+                            const SizedBox(height: 16),
+                            Center(
+                              child: Column(
+                                children: [
+                                  GestureDetector(
+                                    onTap: _pickProfilePhoto,
+                                    child: Container(
+                                      width: 100,
+                                      height: 100,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.grey[300],
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Theme.of(context).brightness == Brightness.light
+                                                ? Colors.black12
+                                                : Colors.white12,
+                                            blurRadius: 8,
+                                            offset: const Offset(2, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: photoUrl != null
+                                          ? ClipOval(
+                                        child: Image.network(
+                                          photoUrl,
+                                          fit: BoxFit.cover,
+                                          width: 100,
+                                          height: 100,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return const Icon(
+                                              Icons.person,
+                                              size: 50,
+                                              color: Colors.grey,
+                                            );
+                                          },
+                                        ),
+                                      )
+                                          : const Icon(
+                                        Icons.person,
+                                        size: 50,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    username,
+                                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text.rich(
+                                    TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: "You're rock! ",
+                                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          text: "You've finished last book in 3 days 🔥",
+                                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            _buildOptionTile(
+                              context,
+                              icon: Icons.notifications_outlined,
+                              title: "Notifications",
+                              hasBadge: true,
+                              badgeCount: 2,
+                              onTap: () {},
+                            ),
+                            _buildOptionTile(
+                              context,
+                              icon: Icons.bookmark_border,
+                              title: "Bookmarks",
+                              onTap: () {},
+                            ),
+                            _buildOptionTile(
+                              context,
+                              icon: Icons.star_border,
+                              title: "Subscription plan",
+                              onTap: () {},
+                            ),
+                            _buildOptionTile(
+                              context,
+                              icon: Icons.settings_outlined,
+                              title: "Account settings",
+                              onTap: () {},
+                            ),
+                            const SizedBox(height: 24),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                _buildStatItem(context, "18 books\nyou have", Icons.book_outlined),
+                                _buildStatItem(context, "158 h\nof reading", Icons.timer_outlined),
+                                _buildStatItem(context, "5 books\ndone", Icons.check_circle_outline),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Your bookshelf",
+                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.arrow_forward,
+                                  size: 20,
+                                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              height: 200,
+                              child: ListView(
+                                scrollDirection: Axis.horizontal,
+                                children: [
+                                  _buildBookshelfItem(context, "assets/1984.png"),
+                                  _buildBookshelfItem(context, "assets/atomic_habits.png"),
+                                  _buildBookshelfItem(context, "assets/harry_potter.png"),
+                                  _buildBookshelfItem(context, "assets/hooked.png"),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 120),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 24),
-
-                    _buildOptionTile(
-                      context,
-                      icon: Icons.notifications_outlined,
-                      title: "Notifications",
-                      hasBadge: true,
-                      badgeCount: 2,
-                      onTap: () {},
+                  ),
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Dock(
+                      selectedIndex: _selectedIndex,
+                      onItemTapped: _onNavIconTapped,
                     ),
-                    _buildOptionTile(
-                      context,
-                      icon: Icons.bookmark_border,
-                      title: "Bookmarks",
-                      onTap: () {},
-                    ),
-                    _buildOptionTile(
-                      context,
-                      icon: Icons.star_border,
-                      title: "Subscription plan",
-                      onTap: () {},
-                    ),
-                    _buildOptionTile(
-                      context,
-                      icon: Icons.settings_outlined,
-                      title: "Account settings",
-                      onTap: () {},
-                    ),
-                    const SizedBox(height: 24),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _buildStatItem(context, "18 books\nyou have", Icons.book_outlined),
-                        _buildStatItem(context, "158 h\nof reading", Icons.timer_outlined),
-                        _buildStatItem(context, "5 books\ndone", Icons.check_circle_outline),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Your bookshelf",
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Icon(
-                          Icons.arrow_forward,
-                          size: 20,
-                          color: Theme.of(context).textTheme.bodyMedium?.color,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      height: 200,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: [
-                          _buildBookshelfItem(context, "assets/1984.png"),
-                          _buildBookshelfItem(context, "assets/atomic_habits.png"),
-                          _buildBookshelfItem(context, "assets/harry_potter.png"),
-                          _buildBookshelfItem(context, "assets/hooked.png"),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 120), // Extra space to ensure content scrolls behind dock
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ),
-          ),
-          // Position the Dock at the bottom
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Dock(
-              selectedIndex: _selectedIndex,
-              onItemTapped: _onNavIconTapped,
-            ),
-          ),
-        ],
-      ),
+            );
+          },
+        );
+      },
     );
   }
 

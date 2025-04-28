@@ -1,7 +1,10 @@
+import 'package:ReadRift/security/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ReadRift/screens/dock.dart';
 import 'package:ReadRift/theme.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -15,8 +18,10 @@ class _SearchScreenState extends State<SearchScreen> {
   final FocusNode _searchFocusNode = FocusNode();
   bool _isSearching = false;
   bool _isSearchFocused = false;
-  int _selectedIndex = 1; // Search screen is index 1 in the Dock
+  int _selectedIndex = 1;
   List<Map<String, dynamic>> searchResults = [];
+  final AuthService _authService = AuthService();
+
   List<Map<String, dynamic>> localBooks = [
     {
       "title": "1984",
@@ -62,7 +67,6 @@ class _SearchScreenState extends State<SearchScreen> {
     },
   ];
 
-  // Simulated online book database
   final List<Map<String, dynamic>> onlineBooks = [
     {
       "title": "Pride and Prejudice",
@@ -131,7 +135,6 @@ class _SearchScreenState extends State<SearchScreen> {
     final lowerQuery = query.toLowerCase();
     searchResults = [];
 
-    // Search local books
     final localMatches = localBooks.where((book) {
       return book["title"].toString().toLowerCase().contains(lowerQuery) ||
           book["author"].toString().toLowerCase().contains(lowerQuery);
@@ -143,7 +146,6 @@ class _SearchScreenState extends State<SearchScreen> {
       "downloadUrl": null,
     }).toList();
 
-    // Search online books
     final onlineMatches = onlineBooks.where((book) {
       return book["title"].toString().toLowerCase().contains(lowerQuery) ||
           book["author"].toString().toLowerCase().contains(lowerQuery);
@@ -155,17 +157,15 @@ class _SearchScreenState extends State<SearchScreen> {
       "downloadUrl": book["downloadUrl"],
     }).toList();
 
-    // Combine results, prioritizing local matches
     searchResults = [...localMatches, ...onlineMatches];
   }
 
   void _downloadBook(Map<String, dynamic> book) {
-    // Simulate downloading by adding the book to the local library
     setState(() {
       localBooks.add({
         "title": book["title"],
         "author": book["author"],
-        "imagePath": "assets/default_book.png", // Placeholder for downloaded books
+        "imagePath": "assets/default_book.png",
         "isCompleted": false,
       });
       searchResults[searchResults.indexOf(book)] = {
@@ -186,205 +186,273 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          SafeArea(
-            bottom: false,
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            Icons.arrow_back,
-                            color: Theme.of(context).brightness == Brightness.light
-                                ? AppColors.lightText
-                                : AppColors.darkText,
-                          ),
-                          onPressed: () {
-                            context.go('/');
-                          },
-                        ),
-                        Expanded(
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).brightness == Brightness.light
-                                  ? AppColors.lightDockBackground.withValues(alpha: 0.3)
-                                  : AppColors.darkDockBackground.withValues(alpha: 0.3),
-                              borderRadius: BorderRadius.circular(100),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.1),
-                                width: 1.0,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 30,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                            child: Row(
+    final user = _authService.currentUser;
+
+    if (user == null) {
+      return const Scaffold(
+        body: Center(child: Text("No user logged in")),
+      );
+    }
+
+    return StreamBuilder<User?>(
+      stream: _authService.authStateChanges,
+      builder: (context, authSnapshot) {
+        if (authSnapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final authUser = authSnapshot.data;
+        if (authUser == null) {
+          return const Scaffold(
+            body: Center(child: Text("No user logged in")),
+          );
+        }
+
+        return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          stream: _authService.getUserDataStream(authUser.uid),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            if (!snapshot.hasData || snapshot.data?.data() == null) {
+              return const Scaffold(
+                body: Center(child: Text("User data not found")),
+              );
+            }
+
+            final photoUrl = authUser.photoURL;
+
+            return Scaffold(
+              body: Stack(
+                children: [
+                  SafeArea(
+                    bottom: false,
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Icon(
-                                  Icons.search_rounded,
-                                  color: Theme.of(context).brightness == Brightness.light
-                                      ? AppColors.lightSecondaryText
-                                      : AppColors.darkSecondaryText,
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.arrow_back,
+                                    color: Theme.of(context).brightness == Brightness.light
+                                        ? AppColors.lightText
+                                        : AppColors.darkText,
+                                  ),
+                                  onPressed: () {
+                                    context.go('/');
+                                  },
                                 ),
-                                const SizedBox(width: 4),
                                 Expanded(
-                                  child: TextField(
-                                    controller: _searchController,
-                                    focusNode: _searchFocusNode,
-                                    decoration: InputDecoration(
-                                      hintText: "Search for books...",
-                                      border: InputBorder.none,
-                                      hintStyle: TextStyle(
-                                        color: Theme.of(context).brightness == Brightness.light
-                                            ? AppColors.lightSecondaryText
-                                            : AppColors.darkSecondaryText,
-                                      ),
-                                    ),
-                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  child: Container(
+                                    margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                    decoration: BoxDecoration(
                                       color: Theme.of(context).brightness == Brightness.light
-                                          ? AppColors.lightText
-                                          : AppColors.darkText,
+                                          ? AppColors.lightDockBackground.withValues(alpha: 0.3)
+                                          : AppColors.darkDockBackground.withValues(alpha: 0.3),
+                                      borderRadius: BorderRadius.circular(100),
+                                      border: Border.all(
+                                        color: Colors.white.withValues(alpha: 0.1),
+                                        width: 1.0,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.1),
+                                          blurRadius: 30,
+                                          offset: const Offset(0, 10),
+                                        ),
+                                      ],
                                     ),
-                                    onChanged: _onSearchChanged,
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.search_rounded,
+                                          color: Theme.of(context).brightness == Brightness.light
+                                              ? AppColors.lightSecondaryText
+                                              : AppColors.darkSecondaryText,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: TextField(
+                                            controller: _searchController,
+                                            focusNode: _searchFocusNode,
+                                            decoration: InputDecoration(
+                                              hintText: "Search for books...",
+                                              border: InputBorder.none,
+                                              hintStyle: TextStyle(
+                                                color: Theme.of(context).brightness == Brightness.light
+                                                    ? AppColors.lightSecondaryText
+                                                    : AppColors.darkSecondaryText,
+                                              ),
+                                            ),
+                                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                              color: Theme.of(context).brightness == Brightness.light
+                                                  ? AppColors.lightText
+                                                  : AppColors.darkText,
+                                            ),
+                                            onChanged: _onSearchChanged,
+                                          ),
+                                        ),
+                                        if (_isSearching)
+                                          IconButton(
+                                            icon: Icon(
+                                              Icons.clear,
+                                              color: Theme.of(context).brightness == Brightness.light
+                                                  ? AppColors.lightSecondaryText
+                                                  : AppColors.darkSecondaryText,
+                                            ),
+                                            onPressed: _clearSearch,
+                                          ),
+                                      ],
+                                    ),
                                   ),
                                 ),
-                                if (_isSearching)
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.clear,
-                                      color: Theme.of(context).brightness == Brightness.light
-                                          ? AppColors.lightSecondaryText
-                                          : AppColors.darkSecondaryText,
+                                IconButton(
+                                  onPressed: () {
+                                    context.go('/profile');
+                                  },
+                                  icon: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.grey[300],
                                     ),
-                                    onPressed: _clearSearch,
+                                    child: photoUrl != null
+                                        ? ClipOval(
+                                      child: Image.network(
+                                        photoUrl,
+                                        fit: BoxFit.cover,
+                                        width: 40,
+                                        height: 40,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return const Icon(
+                                            Icons.person,
+                                            size: 24,
+                                            color: Colors.grey,
+                                          );
+                                        },
+                                      ),
+                                    )
+                                        : const Icon(
+                                      Icons.person,
+                                      size: 24,
+                                      color: Colors.grey,
+                                    ),
                                   ),
+                                ),
                               ],
                             ),
-                          ),
+                            const SizedBox(height: 10),
+                            if (_isSearching && searchResults.isEmpty)
+                              Container(
+                                alignment: Alignment.center,
+                                child: Text(
+                                  "No results found for '${_searchController.text}'",
+                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    color: Theme.of(context).brightness == Brightness.light
+                                        ? AppColors.lightSecondaryText
+                                        : AppColors.darkSecondaryText,
+                                  ),
+                                ),
+                              ),
+                            if (_isSearching && searchResults.isNotEmpty)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ...searchResults.map((result) => _buildSearchResultItem(context, result)).toList(),
+                                ],
+                              ),
+                            if (!_isSearchFocused && !_isSearching) ...[
+                              Text(
+                                "Recent Searches",
+                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                  fontWeight: FontWeight.w400,
+                                  color: Theme.of(context).brightness == Brightness.light
+                                      ? AppColors.lightText
+                                      : AppColors.darkText,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              SizedBox(
+                                height: 36,
+                                child: ListView(
+                                  scrollDirection: Axis.horizontal,
+                                  children: [
+                                    _buildSearchChip(context, "George Orwell"),
+                                    _buildSearchChip(context, "James Clear"),
+                                    _buildSearchChip(context, "J.K. Rowling"),
+                                    _buildSearchChip(context, "Nir Eyal"),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                "Recommendations",
+                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                  fontWeight: FontWeight.w400,
+                                  color: Theme.of(context).brightness == Brightness.light
+                                      ? AppColors.lightText
+                                      : AppColors.darkText,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                height: 60,
+                                child: ListView(
+                                  scrollDirection: Axis.horizontal,
+                                  children: [
+                                    _buildRecommendationItem(context, "1984", "George Orwell"),
+                                    _buildRecommendationItem(context, "Atomic Habits", "James Clear"),
+                                    _buildRecommendationItem(context, "Harry Potter", "J.K. Rowling"),
+                                    _buildRecommendationItem(context, "Hooked", "Nir Eyal"),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            if (!_isSearching && !_isSearchFocused)
+                              Container(
+                                height: 200,
+                                alignment: Alignment.center,
+                                child: Text(
+                                  "Search for books...",
+                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    color: Theme.of(context).brightness == Brightness.light
+                                        ? AppColors.lightSecondaryText
+                                        : AppColors.darkSecondaryText,
+                                  ),
+                                ),
+                              ),
+                            const SizedBox(height: 120),
+                          ],
                         ),
-                        IconButton(
-                          icon: Icon(
-                            Icons.account_circle_outlined,
-                            color: Theme.of(context).brightness == Brightness.light
-                                ? AppColors.lightText
-                                : AppColors.darkText,
-                          ),
-                          onPressed: () {
-                            context.go('/profile');
-                          },
-                        ),
-                      ],
+                      ),
                     ),
-                    const SizedBox(height: 10),
-                    if (_isSearching && searchResults.isEmpty)
-                      Container(
-                        alignment: Alignment.center,
-                        child: Text(
-                          "No results found for '${_searchController.text}'",
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Theme.of(context).brightness == Brightness.light
-                                ? AppColors.lightSecondaryText
-                                : AppColors.darkSecondaryText,
-                          ),
-                        ),
+                  ),
+                  if (!_isSearchFocused)
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Dock(
+                        selectedIndex: _selectedIndex,
+                        onItemTapped: _onNavIconTapped,
                       ),
-                    if (_isSearching && searchResults.isNotEmpty)
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ...searchResults.map((result) => _buildSearchResultItem(context, result)).toList(),
-                        ],
-                      ),
-                    if (!_isSearchFocused && !_isSearching) ...[
-                      Text(
-                        "Recent Searches",
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w400,
-                          color: Theme.of(context).brightness == Brightness.light
-                              ? AppColors.lightText
-                              : AppColors.darkText,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      SizedBox(
-                        height: 36,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          children: [
-                            _buildSearchChip(context, "George Orwell"),
-                            _buildSearchChip(context, "James Clear"),
-                            _buildSearchChip(context, "J.K. Rowling"),
-                            _buildSearchChip(context, "Nir Eyal"),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        "Recommendations",
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w400,
-                          color: Theme.of(context).brightness == Brightness.light
-                              ? AppColors.lightText
-                              : AppColors.darkText,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        height: 60,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          children: [
-                            _buildRecommendationItem(context, "1984", "George Orwell"),
-                            _buildRecommendationItem(context, "Atomic Habits", "James Clear"),
-                            _buildRecommendationItem(context, "Harry Potter", "J.K. Rowling"),
-                            _buildRecommendationItem(context, "Hooked", "Nir Eyal"),
-                          ],
-                        ),
-                      ),
-                    ],
-                    if (!_isSearching && !_isSearchFocused)
-                      Container(
-                        height: 200,
-                        alignment: Alignment.center,
-                        child: Text(
-                          "Search for books...",
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Theme.of(context).brightness == Brightness.light
-                                ? AppColors.lightSecondaryText
-                                : AppColors.darkSecondaryText,
-                          ),
-                        ),
-                      ),
-                    const SizedBox(height: 120),
-                  ],
-                ),
+                    ),
+                ],
               ),
-            ),
-          ),
-          if (!_isSearchFocused)
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Dock(
-                selectedIndex: _selectedIndex,
-                onItemTapped: _onNavIconTapped,
-              ),
-            ),
-        ],
-      ),
+            );
+          },
+        );
+      },
     );
   }
 

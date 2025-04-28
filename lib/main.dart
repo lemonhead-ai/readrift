@@ -1,4 +1,5 @@
 import 'package:ReadRift/models/blurred_status_bar.dart';
+import 'package:ReadRift/security/auth_service.dart';
 import 'package:ReadRift/security/reset_password_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -11,9 +12,12 @@ import 'package:ReadRift/screens/welcome_screen.dart';
 import 'package:ReadRift/screens/login_screen.dart';
 import 'package:ReadRift/screens/signup_screen.dart';
 import 'package:ReadRift/theme.dart';
+import 'package:firebase_core/firebase_core.dart';
 
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(); // Initialize Firebase
 
-void main() {
   // Set status bar icon brightness
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -65,6 +69,31 @@ class MyApp extends StatelessWidget {
         builder: (context, state) => const ResetPasswordScreen(),
       ),
     ],
+    redirect: (BuildContext context, GoRouterState state) {
+      final authService = AuthService();
+      final user = authService.currentUser;
+      final bool isLoggedIn = user != null;
+
+      // Redirect to HomeScreen if user is logged in and trying to access auth screens
+      if (isLoggedIn &&
+          (state.matchedLocation == '/welcome' ||
+              state.matchedLocation == '/login' ||
+              state.matchedLocation == '/signup' ||
+              state.matchedLocation == '/reset-password')) {
+        return '/';
+      }
+
+      // Redirect to WelcomeScreen if user is not logged in and trying to access protected screens
+      if (!isLoggedIn &&
+          (state.matchedLocation == '/' ||
+              state.matchedLocation == '/profile' ||
+              state.matchedLocation == '/search' ||
+              state.matchedLocation == '/library')) {
+        return '/welcome';
+      }
+
+      return null; // No redirect needed
+    },
   );
 
   @override
@@ -80,7 +109,7 @@ class MyApp extends StatelessWidget {
     );
 
     return Directionality(
-      textDirection: TextDirection.ltr, // Set text direction to left-to-right
+      textDirection: TextDirection.ltr,
       child: BlurredStatusBar(
         child: MaterialApp.router(
           theme: lightTheme(),
