@@ -14,13 +14,13 @@ class WelcomeScreen extends StatelessWidget {
       body: Stack(
         children: [
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Column(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const SizedBox(height: 0),
@@ -82,39 +82,42 @@ class WelcomeScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Do you need an account? ",
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontFamily: 'FuturaPT',
-                              fontWeight: FontWeight.w500,
-                              color: Theme.of(context).brightness ==
-                                      Brightness.light
-                                  ? AppColors.lightSecondaryText
-                                  : AppColors.darkSecondaryText,
-                            ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          context.go('/signup');
-                        },
-                        child: Text(
-                          "Sign up",
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Do you need an account? ",
                           style:
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: AppColors.accentOrange,
-                                    fontWeight: FontWeight.w500,
                                     fontFamily: 'FuturaPT',
+                                    fontWeight: FontWeight.w500,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.light
+                                        ? AppColors.lightSecondaryText
+                                        : AppColors.darkSecondaryText,
                                   ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 56),
-                ],
+                        GestureDetector(
+                          onTap: () {
+                            context.go('/signup');
+                          },
+                          child: Text(
+                            "Sign up",
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color: AppColors.accentOrange,
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'FuturaPT',
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 56),
+                  ],
+                ),
               ),
             ),
           ),

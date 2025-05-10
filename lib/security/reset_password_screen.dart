@@ -66,25 +66,25 @@ class ResetPasswordScreenState extends State<ResetPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              IconButton(
-                icon: Icon(
-                  Icons.arrow_back,
-                  color: Theme.of(context).brightness == Brightness.light
-                      ? AppColors.lightText
-                      : AppColors.darkText,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                IconButton(
+                  icon: Icon(
+                    Icons.arrow_back,
+                    color: Theme.of(context).brightness == Brightness.light
+                        ? AppColors.lightText
+                        : AppColors.darkText,
+                  ),
+                  onPressed: () {
+                    context.go('/login');
+                  },
                 ),
-                onPressed: () {
-                  context.go('/login');
-                },
-              ),
-              const SizedBox(height: 32),
-              Expanded(
-                child: Column(
+                const SizedBox(height: 32),
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -186,25 +186,25 @@ class ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       ),
                   ],
                 ),
-              ),
-              Center(
-                child: GestureDetector(
-                  onTap: () {
-                    context.go('/login');
-                  },
-                  child: Text(
-                    "Back to login",
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.accentOrange,
-                          fontWeight: FontWeight.w500,
-                          fontFamily: 'FuturaPT',
-                          fontSize: 16,
-                        ),
+                Center(
+                  child: GestureDetector(
+                    onTap: () {
+                      context.go('/login');
+                    },
+                    child: Text(
+                      "Back to login",
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.accentOrange,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'FuturaPT',
+                            fontSize: 16,
+                          ),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-            ],
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         ),
       ),
