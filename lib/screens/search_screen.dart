@@ -1,19 +1,19 @@
-import 'package:ReadRift/security/auth_service.dart';
+import 'package:readrift/security/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ReadRift/screens/dock.dart';
-import 'package:ReadRift/theme.dart';
+import 'package:readrift/screens/dock.dart';
+import 'package:readrift/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
 
   @override
-  _SearchScreenState createState() => _SearchScreenState();
+  SearchScreenState createState() => SearchScreenState();
 }
 
-class _SearchScreenState extends State<SearchScreen> {
+class SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   bool _isSearching = false;
@@ -139,23 +139,23 @@ class _SearchScreenState extends State<SearchScreen> {
       return book["title"].toString().toLowerCase().contains(lowerQuery) ||
           book["author"].toString().toLowerCase().contains(lowerQuery);
     }).map((book) => {
-      "title": book["title"],
-      "author": book["author"],
-      "isLocal": true,
-      "isFree": false,
-      "downloadUrl": null,
-    }).toList();
+          "title": book["title"],
+          "author": book["author"],
+          "isLocal": true,
+          "isFree": false,
+          "downloadUrl": null,
+        });
 
     final onlineMatches = onlineBooks.where((book) {
       return book["title"].toString().toLowerCase().contains(lowerQuery) ||
           book["author"].toString().toLowerCase().contains(lowerQuery);
     }).map((book) => {
-      "title": book["title"],
-      "author": book["author"],
-      "isLocal": false,
-      "isFree": book["isFree"],
-      "downloadUrl": book["downloadUrl"],
-    }).toList();
+          "title": book["title"],
+          "author": book["author"],
+          "isLocal": false,
+          "isFree": book["isFree"],
+          "downloadUrl": book["downloadUrl"],
+        });
 
     searchResults = [...localMatches, ...onlineMatches];
   }
@@ -244,7 +244,8 @@ class _SearchScreenState extends State<SearchScreen> {
                                 IconButton(
                                   icon: Icon(
                                     Icons.arrow_back,
-                                    color: Theme.of(context).brightness == Brightness.light
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.light
                                         ? AppColors.lightText
                                         : AppColors.darkText,
                                   ),
@@ -254,20 +255,25 @@ class _SearchScreenState extends State<SearchScreen> {
                                 ),
                                 Expanded(
                                   child: Container(
-                                    margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 4.0),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 5, vertical: 1),
                                     decoration: BoxDecoration(
-                                      color: Theme.of(context).brightness == Brightness.light
-                                          ? AppColors.lightDockBackground.withValues(alpha: 0.3)
-                                          : AppColors.darkDockBackground.withValues(alpha: 0.3),
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.light
+                                          ? AppColors.lightDockBackground
+                                              .withAlpha((0.3 * 255).toInt())
+                                          : AppColors.darkDockBackground
+                                              .withAlpha((0.3 * 255).toInt()),
                                       borderRadius: BorderRadius.circular(100),
                                       border: Border.all(
-                                        color: Colors.white.withValues(alpha: 0.1),
+                                        color: Colors.white.withAlpha(0x19),
                                         width: 1.0,
                                       ),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.1),
+                                          color: Colors.black.withAlpha(0x19),
                                           blurRadius: 30,
                                           offset: const Offset(0, 10),
                                         ),
@@ -277,7 +283,8 @@ class _SearchScreenState extends State<SearchScreen> {
                                       children: [
                                         Icon(
                                           Icons.search_rounded,
-                                          color: Theme.of(context).brightness == Brightness.light
+                                          color: Theme.of(context).brightness ==
+                                                  Brightness.light
                                               ? AppColors.lightSecondaryText
                                               : AppColors.darkSecondaryText,
                                         ),
@@ -290,16 +297,25 @@ class _SearchScreenState extends State<SearchScreen> {
                                               hintText: "Search for books...",
                                               border: InputBorder.none,
                                               hintStyle: TextStyle(
-                                                color: Theme.of(context).brightness == Brightness.light
-                                                    ? AppColors.lightSecondaryText
-                                                    : AppColors.darkSecondaryText,
+                                                color: Theme.of(context)
+                                                            .brightness ==
+                                                        Brightness.light
+                                                    ? AppColors
+                                                        .lightSecondaryText
+                                                    : AppColors
+                                                        .darkSecondaryText,
                                               ),
                                             ),
-                                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                              color: Theme.of(context).brightness == Brightness.light
-                                                  ? AppColors.lightText
-                                                  : AppColors.darkText,
-                                            ),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium
+                                                ?.copyWith(
+                                                  color: Theme.of(context)
+                                                              .brightness ==
+                                                          Brightness.light
+                                                      ? AppColors.lightText
+                                                      : AppColors.darkText,
+                                                ),
                                             onChanged: _onSearchChanged,
                                           ),
                                         ),
@@ -307,7 +323,9 @@ class _SearchScreenState extends State<SearchScreen> {
                                           IconButton(
                                             icon: Icon(
                                               Icons.clear,
-                                              color: Theme.of(context).brightness == Brightness.light
+                                              color: Theme.of(context)
+                                                          .brightness ==
+                                                      Brightness.light
                                                   ? AppColors.lightSecondaryText
                                                   : AppColors.darkSecondaryText,
                                             ),
@@ -330,25 +348,26 @@ class _SearchScreenState extends State<SearchScreen> {
                                     ),
                                     child: photoUrl != null
                                         ? ClipOval(
-                                      child: Image.network(
-                                        photoUrl,
-                                        fit: BoxFit.cover,
-                                        width: 40,
-                                        height: 40,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return const Icon(
+                                            child: Image.network(
+                                              photoUrl,
+                                              fit: BoxFit.cover,
+                                              width: 40,
+                                              height: 40,
+                                              errorBuilder:
+                                                  (context, error, stackTrace) {
+                                                return const Icon(
+                                                  Icons.person,
+                                                  size: 24,
+                                                  color: Colors.grey,
+                                                );
+                                              },
+                                            ),
+                                          )
+                                        : const Icon(
                                             Icons.person,
                                             size: 24,
                                             color: Colors.grey,
-                                          );
-                                        },
-                                      ),
-                                    )
-                                        : const Icon(
-                                      Icons.person,
-                                      size: 24,
-                                      color: Colors.grey,
-                                    ),
+                                          ),
                                   ),
                                 ),
                               ],
@@ -359,29 +378,38 @@ class _SearchScreenState extends State<SearchScreen> {
                                 alignment: Alignment.center,
                                 child: Text(
                                   "No results found for '${_searchController.text}'",
-                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: Theme.of(context).brightness == Brightness.light
-                                        ? AppColors.lightSecondaryText
-                                        : AppColors.darkSecondaryText,
-                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.copyWith(
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.light
+                                            ? AppColors.lightSecondaryText
+                                            : AppColors.darkSecondaryText,
+                                      ),
                                 ),
                               ),
                             if (_isSearching && searchResults.isNotEmpty)
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  ...searchResults.map((result) => _buildSearchResultItem(context, result)).toList(),
+                                  ...searchResults.map((result) =>
+                                      _buildSearchResultItem(context, result)),
                                 ],
                               ),
                             if (!_isSearchFocused && !_isSearching) ...[
                               Text(
                                 "Recent Searches",
-                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                  fontWeight: FontWeight.w400,
-                                  color: Theme.of(context).brightness == Brightness.light
-                                      ? AppColors.lightText
-                                      : AppColors.darkText,
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w400,
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.light
+                                          ? AppColors.lightText
+                                          : AppColors.darkText,
+                                    ),
                               ),
                               const SizedBox(height: 2),
                               SizedBox(
@@ -399,12 +427,16 @@ class _SearchScreenState extends State<SearchScreen> {
                               const SizedBox(height: 10),
                               Text(
                                 "Recommendations",
-                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                  fontWeight: FontWeight.w400,
-                                  color: Theme.of(context).brightness == Brightness.light
-                                      ? AppColors.lightText
-                                      : AppColors.darkText,
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w400,
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.light
+                                          ? AppColors.lightText
+                                          : AppColors.darkText,
+                                    ),
                               ),
                               const SizedBox(height: 12),
                               SizedBox(
@@ -412,10 +444,14 @@ class _SearchScreenState extends State<SearchScreen> {
                                 child: ListView(
                                   scrollDirection: Axis.horizontal,
                                   children: [
-                                    _buildRecommendationItem(context, "1984", "George Orwell"),
-                                    _buildRecommendationItem(context, "Atomic Habits", "James Clear"),
-                                    _buildRecommendationItem(context, "Harry Potter", "J.K. Rowling"),
-                                    _buildRecommendationItem(context, "Hooked", "Nir Eyal"),
+                                    _buildRecommendationItem(
+                                        context, "1984", "George Orwell"),
+                                    _buildRecommendationItem(context,
+                                        "Atomic Habits", "James Clear"),
+                                    _buildRecommendationItem(context,
+                                        "Harry Potter", "J.K. Rowling"),
+                                    _buildRecommendationItem(
+                                        context, "Hooked", "Nir Eyal"),
                                   ],
                                 ),
                               ),
@@ -426,11 +462,15 @@ class _SearchScreenState extends State<SearchScreen> {
                                 alignment: Alignment.center,
                                 child: Text(
                                   "Search for books...",
-                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: Theme.of(context).brightness == Brightness.light
-                                        ? AppColors.lightSecondaryText
-                                        : AppColors.darkSecondaryText,
-                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.copyWith(
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.light
+                                            ? AppColors.lightSecondaryText
+                                            : AppColors.darkSecondaryText,
+                                      ),
                                 ),
                               ),
                             const SizedBox(height: 120),
@@ -462,34 +502,35 @@ class _SearchScreenState extends State<SearchScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Theme.of(context).brightness == Brightness.light
-            ? AppColors.lightDockBackground.withOpacity(0.1)
-            : AppColors.darkDockBackground.withOpacity(0.1),
+            ? AppColors.lightDockBackground.withAlpha((0.1 * 255).toInt())
+            : AppColors.darkDockBackground.withAlpha((0.1 * 255).toInt()),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: Theme.of(context).brightness == Brightness.light
-              ? AppColors.lightSecondaryText.withOpacity(0.3)
-              : AppColors.darkSecondaryText.withOpacity(0.3),
+              ? AppColors.lightSecondaryText.withAlpha(0x4D)
+              : AppColors.darkSecondaryText.withAlpha(0x4D),
         ),
       ),
       child: Text(
         label,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: Theme.of(context).brightness == Brightness.light
-              ? AppColors.lightText
-              : AppColors.darkText,
-        ),
+              color: Theme.of(context).brightness == Brightness.light
+                  ? AppColors.lightText
+                  : AppColors.darkText,
+            ),
       ),
     );
   }
 
-  Widget _buildRecommendationItem(BuildContext context, String title, String author) {
+  Widget _buildRecommendationItem(
+      BuildContext context, String title, String author) {
     return Container(
       margin: const EdgeInsets.only(right: 16),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Theme.of(context).brightness == Brightness.light
-            ? AppColors.lightDockBackground.withOpacity(0.1)
-            : AppColors.darkDockBackground.withOpacity(0.1),
+            ? AppColors.lightDockBackground.withAlpha((0.1 * 255).toInt())
+            : AppColors.darkDockBackground.withAlpha((0.1 * 255).toInt()),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -499,11 +540,11 @@ class _SearchScreenState extends State<SearchScreen> {
           Text(
             title,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).brightness == Brightness.light
-                  ? AppColors.lightText
-                  : AppColors.darkText,
-            ),
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).brightness == Brightness.light
+                      ? AppColors.lightText
+                      : AppColors.darkText,
+                ),
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
           ),
@@ -511,11 +552,11 @@ class _SearchScreenState extends State<SearchScreen> {
           Text(
             "by $author",
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).brightness == Brightness.light
-                  ? AppColors.lightSecondaryText
-                  : AppColors.darkSecondaryText,
-              fontSize: 12,
-            ),
+                  color: Theme.of(context).brightness == Brightness.light
+                      ? AppColors.lightSecondaryText
+                      : AppColors.darkSecondaryText,
+                  fontSize: 12,
+                ),
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
           ),
@@ -524,7 +565,8 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildSearchResultItem(BuildContext context, Map<String, dynamic> result) {
+  Widget _buildSearchResultItem(
+      BuildContext context, Map<String, dynamic> result) {
     final isLocal = result["isLocal"] as bool;
     final isFree = result["isFree"] as bool;
     final downloadUrl = result["downloadUrl"] as String?;
@@ -540,25 +582,26 @@ class _SearchScreenState extends State<SearchScreen> {
                 Text(
                   result["title"],
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).brightness == Brightness.light
-                        ? AppColors.lightText
-                        : AppColors.darkText,
-                  ),
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).brightness == Brightness.light
+                            ? AppColors.lightText
+                            : AppColors.darkText,
+                      ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   "by ${result["author"]}",
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).brightness == Brightness.light
-                        ? AppColors.lightSecondaryText
-                        : AppColors.darkSecondaryText,
-                  ),
+                        color: Theme.of(context).brightness == Brightness.light
+                            ? AppColors.lightSecondaryText
+                            : AppColors.darkSecondaryText,
+                      ),
                 ),
                 const SizedBox(height: 4),
                 if (isLocal)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.green,
                       borderRadius: BorderRadius.circular(12),
@@ -566,9 +609,9 @@ class _SearchScreenState extends State<SearchScreen> {
                     child: Text(
                       "Available",
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white,
-                        fontSize: 12,
-                      ),
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
                     ),
                   ),
               ],
@@ -586,8 +629,8 @@ class _SearchScreenState extends State<SearchScreen> {
               child: Text(
                 "GET",
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white,
-                ),
+                      color: Colors.white,
+                    ),
               ),
             ),
           if (!isLocal && !isFree)
@@ -600,9 +643,9 @@ class _SearchScreenState extends State<SearchScreen> {
               child: Text(
                 "Paid",
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white,
-                  fontSize: 12,
-                ),
+                      color: Colors.white,
+                      fontSize: 12,
+                    ),
               ),
             ),
         ],

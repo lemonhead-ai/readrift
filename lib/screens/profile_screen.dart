@@ -1,9 +1,8 @@
-import 'dart:ui';
-import 'package:ReadRift/security/auth_service.dart';
+import 'package:readrift/security/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ReadRift/screens/dock.dart';
+import 'package:readrift/screens/dock.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -12,10 +11,10 @@ class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  _ProfileScreenState createState() => _ProfileScreenState();
+  ProfileScreenState createState() => ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class ProfileScreenState extends State<ProfileScreen> {
   int _selectedIndex = 3;
   final AuthService _authService = AuthService();
   final ImagePicker _picker = ImagePicker();
@@ -31,6 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (image != null) {
       File photoFile = File(image.path);
       String? error = await _authService.updateProfilePhoto(photoFile);
+      if (!mounted) return;
       if (error == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Profile photo updated successfully!")),
@@ -110,7 +110,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 IconButton(
                                   icon: Icon(
                                     Icons.arrow_back,
-                                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                                    color: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.color,
                                   ),
                                   onPressed: () {
                                     context.go('/');
@@ -139,9 +142,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         color: Colors.grey[300],
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Theme.of(context).brightness == Brightness.light
-                                                ? Colors.black12
-                                                : Colors.white12,
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                        Brightness.light
+                                                    ? Colors.black12
+                                                    : Colors.white12,
                                             blurRadius: 8,
                                             offset: const Offset(2, 2),
                                           ),
@@ -149,34 +154,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       ),
                                       child: photoUrl != null
                                           ? ClipOval(
-                                        child: Image.network(
-                                          photoUrl,
-                                          fit: BoxFit.cover,
-                                          width: 100,
-                                          height: 100,
-                                          errorBuilder: (context, error, stackTrace) {
-                                            return const Icon(
+                                              child: Image.network(
+                                                photoUrl,
+                                                fit: BoxFit.cover,
+                                                width: 100,
+                                                height: 100,
+                                                errorBuilder: (context, error,
+                                                    stackTrace) {
+                                                  return const Icon(
+                                                    Icons.person,
+                                                    size: 50,
+                                                    color: Colors.grey,
+                                                  );
+                                                },
+                                              ),
+                                            )
+                                          : const Icon(
                                               Icons.person,
                                               size: 50,
                                               color: Colors.grey,
-                                            );
-                                          },
-                                        ),
-                                      )
-                                          : const Icon(
-                                        Icons.person,
-                                        size: 50,
-                                        color: Colors.grey,
-                                      ),
+                                            ),
                                     ),
                                   ),
                                   const SizedBox(height: 12),
                                   Text(
                                     username,
-                                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: Theme.of(context).textTheme.bodyMedium?.color,
-                                    ),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.color,
+                                        ),
                                   ),
                                   const SizedBox(height: 8),
                                   Text.rich(
@@ -184,15 +196,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       children: [
                                         TextSpan(
                                           text: "You're rock! ",
-                                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                            color: Colors.grey,
-                                          ),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.copyWith(
+                                                color: Colors.grey,
+                                              ),
                                         ),
                                         TextSpan(
-                                          text: "You've finished last book in 3 days 🔥",
-                                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                            color: Colors.grey,
-                                          ),
+                                          text:
+                                              "You've finished last book in 3 days 🔥",
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.copyWith(
+                                                color: Colors.grey,
+                                              ),
                                         ),
                                       ],
                                     ),
@@ -232,9 +251,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
-                                _buildStatItem(context, "18 books\nyou have", Icons.book_outlined),
-                                _buildStatItem(context, "158 h\nof reading", Icons.timer_outlined),
-                                _buildStatItem(context, "5 books\ndone", Icons.check_circle_outline),
+                                _buildStatItem(context, "18 books\nyou have",
+                                    Icons.book_outlined),
+                                _buildStatItem(context, "158 h\nof reading",
+                                    Icons.timer_outlined),
+                                _buildStatItem(context, "5 books\ndone",
+                                    Icons.check_circle_outline),
                               ],
                             ),
                             const SizedBox(height: 24),
@@ -243,14 +265,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               children: [
                                 Text(
                                   "Your bookshelf",
-                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                 ),
                                 Icon(
                                   Icons.arrow_forward,
                                   size: 20,
-                                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                                  color: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.color,
                                 ),
                               ],
                             ),
@@ -260,10 +288,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               child: ListView(
                                 scrollDirection: Axis.horizontal,
                                 children: [
-                                  _buildBookshelfItem(context, "assets/1984.png"),
-                                  _buildBookshelfItem(context, "assets/atomic_habits.png"),
-                                  _buildBookshelfItem(context, "assets/harry_potter.png"),
-                                  _buildBookshelfItem(context, "assets/hooked.png"),
+                                  _buildBookshelfItem(
+                                      context, "assets/1984.png"),
+                                  _buildBookshelfItem(
+                                      context, "assets/atomic_habits.png"),
+                                  _buildBookshelfItem(
+                                      context, "assets/harry_potter.png"),
+                                  _buildBookshelfItem(
+                                      context, "assets/hooked.png"),
                                 ],
                               ),
                             ),
@@ -290,14 +322,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildOptionTile(
-      BuildContext context, {
-        required IconData icon,
-        required String title,
-        Color? titleColor,
-        bool hasBadge = false,
-        int badgeCount = 0,
-        required VoidCallback onTap,
-      }) {
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    Color? titleColor,
+    bool hasBadge = false,
+    int badgeCount = 0,
+    required VoidCallback onTap,
+  }) {
     return ListTile(
       leading: Icon(
         icon,
@@ -306,24 +338,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
       title: Text(
         title,
         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-          color: titleColor ?? Theme.of(context).textTheme.bodyMedium?.color,
-        ),
+              color:
+                  titleColor ?? Theme.of(context).textTheme.bodyMedium?.color,
+            ),
       ),
       trailing: hasBadge
           ? Container(
-        padding: const EdgeInsets.all(6),
-        decoration: const BoxDecoration(
-          color: Colors.red,
-          shape: BoxShape.circle,
-        ),
-        child: Text(
-          badgeCount.toString(),
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-          ),
-        ),
-      )
+              padding: const EdgeInsets.all(6),
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                badgeCount.toString(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                ),
+              ),
+            )
           : null,
       onTap: onTap,
     );
@@ -341,8 +374,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Text(
           label,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).textTheme.bodyMedium?.color,
-          ),
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
           textAlign: TextAlign.center,
         ),
       ],

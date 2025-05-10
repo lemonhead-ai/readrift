@@ -1,19 +1,18 @@
-import 'dart:ui';
-import 'package:ReadRift/security/auth_service.dart';
+import 'package:readrift/security/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
-import 'package:ReadRift/screens/dock.dart';
+import 'package:readrift/screens/dock.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  HomeScreenState createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   final AuthService _authService = AuthService();
 
@@ -84,21 +83,30 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 Text(
                                   "Wed",
-                                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                    color: Colors.orange,
-                                    fontSize: 60,
-                                    fontFamily: 'SFProRounded',
-                                    fontWeight: FontWeight.w900,
-                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium
+                                      ?.copyWith(
+                                        color: Colors.orange,
+                                        fontSize: 60,
+                                        fontFamily: 'SFProRounded',
+                                        fontWeight: FontWeight.w900,
+                                      ),
                                 ),
                                 Text(
                                   "November, 23\n 2025",
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Theme.of(context).textTheme.bodyMedium?.color,
-                                    fontFamily: 'SFProRounded',
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 18,
-                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.color,
+                                        fontFamily: 'SFProRounded',
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 18,
+                                      ),
                                   textAlign: TextAlign.right,
                                 ),
                               ],
@@ -108,10 +116,16 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 Text(
                                   "Hello, ",
-                                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Theme.of(context).textTheme.bodyMedium?.color,
-                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.color,
+                                      ),
                                 ),
                                 Container(
                                   width: 35,
@@ -122,31 +136,35 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   child: photoUrl != null
                                       ? ClipOval(
-                                    child: Image.network(
-                                      photoUrl,
-                                      fit: BoxFit.cover,
-                                      width: 35,
-                                      height: 35,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return const Icon(
+                                          child: Image.network(
+                                            photoUrl,
+                                            fit: BoxFit.cover,
+                                            width: 35,
+                                            height: 35,
+                                            errorBuilder:
+                                                (context, error, stackTrace) {
+                                              return const Icon(
+                                                Icons.person,
+                                                size: 24,
+                                                color: Colors.grey,
+                                              );
+                                            },
+                                          ),
+                                        )
+                                      : const Icon(
                                           Icons.person,
                                           size: 24,
                                           color: Colors.grey,
-                                        );
-                                      },
-                                    ),
-                                  )
-                                      : const Icon(
-                                    Icons.person,
-                                    size: 24,
-                                    color: Colors.grey,
-                                  ),
+                                        ),
                                 ),
                                 Text(
                                   " $username",
-                                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                    color: Colors.orange,
-                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium
+                                      ?.copyWith(
+                                        color: Colors.orange,
+                                      ),
                                 ),
                                 const SizedBox(width: 8),
                               ],
@@ -206,40 +224,59 @@ class _HomeScreenState extends State<HomeScreen> {
                                 children: [
                                   TextSpan(
                                     text: "You're currently reading ",
-                                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyLarge
+                                        ?.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                   TextSpan(
                                     text: "Hooked",
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyLarge
-                                        ?.copyWith(fontWeight: FontWeight.bold, color: Colors.orange),
+                                        ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.orange),
                                   ),
                                   TextSpan(
                                     text: ". You have 📚 ",
-                                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyLarge
+                                        ?.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                   TextSpan(
                                     text: "4 books ",
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyLarge
-                                        ?.copyWith(fontWeight: FontWeight.bold, color: Colors.orange),
+                                        ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.orange),
                                   ),
                                   TextSpan(
-                                    text: "in progress. You're free to read for 🕒 ",
-                                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                                    text:
+                                        "in progress. You're free to read for 🕒 ",
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyLarge
+                                        ?.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                   TextSpan(
                                     text: "45 mins",
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyLarge
-                                        ?.copyWith(fontWeight: FontWeight.bold, color: Colors.orange),
+                                        ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.orange),
                                   ),
                                   TextSpan(
                                     text: " after 8 PM.",
-                                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyLarge
+                                        ?.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                 ],
                               ),
@@ -261,10 +298,16 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(height: 24),
                             Text(
                               "Continue reading",
-                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).textTheme.bodyMedium?.color,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.color,
+                                  ),
                             ),
                             const SizedBox(height: 10),
                             SizedBox(
@@ -278,45 +321,64 @@ class _HomeScreenState extends State<HomeScreen> {
                                     top: 50,
                                     bottom: 0,
                                     child: Container(
-                                      padding: const EdgeInsets.fromLTRB(180, 16, 16, 16),
+                                      padding: const EdgeInsets.fromLTRB(
+                                          180, 16, 16, 16),
                                       decoration: BoxDecoration(
-                                        color: Theme.of(context).brightness == Brightness.light
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.light
                                             ? Colors.grey[300]
                                             : Colors.grey[800],
                                         borderRadius: BorderRadius.circular(34),
                                       ),
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
                                           Text(
                                             "Reading now",
-                                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                              color: Colors.grey,
-                                            ),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                  color: Colors.grey,
+                                                ),
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
                                             "15%",
-                                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              color: Theme.of(context).textTheme.bodyMedium?.color,
-                                            ),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .headlineSmall
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyMedium
+                                                      ?.color,
+                                                ),
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
                                             "- 5 hours left",
-                                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                              color: Colors.grey,
-                                            ),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                  color: Colors.grey,
+                                                ),
                                           ),
                                           const SizedBox(height: 8),
                                           LinearProgressIndicator(
-                                            borderRadius: BorderRadius.circular(20),
+                                            borderRadius:
+                                                BorderRadius.circular(20),
                                             value: 0.15,
                                             backgroundColor: Colors.grey[300],
-                                            valueColor: AlwaysStoppedAnimation<Color>(
-                                              Theme.of(context).brightness == Brightness.light
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                              Theme.of(context).brightness ==
+                                                      Brightness.light
                                                   ? Colors.black
                                                   : Colors.white,
                                             ),
@@ -336,7 +398,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                         decoration: BoxDecoration(
                                           boxShadow: [
                                             BoxShadow(
-                                              color: Theme.of(context).brightness == Brightness.light
+                                              color: Theme.of(context)
+                                                          .brightness ==
+                                                      Brightness.light
                                                   ? Colors.black12
                                                   : Colors.white12,
                                               blurRadius: 8,

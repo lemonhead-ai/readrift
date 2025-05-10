@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:ReadRift/theme.dart';
+import 'package:readrift/theme.dart';
 
 class BlurredStatusBar extends StatelessWidget {
   final Widget child;

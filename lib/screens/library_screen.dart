@@ -1,19 +1,19 @@
-import 'package:ReadRift/security/auth_service.dart';
+import 'package:readrift/security/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ReadRift/screens/dock.dart';
-import 'package:ReadRift/theme.dart';
+import 'package:readrift/screens/dock.dart';
+import 'package:readrift/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
 
   @override
-  _LibraryScreenState createState() => _LibraryScreenState();
+  LibraryScreenState createState() => LibraryScreenState();
 }
 
-class _LibraryScreenState extends State<LibraryScreen> {
+class LibraryScreenState extends State<LibraryScreen> {
   int _selectedIndex = 2;
   final AuthService _authService = AuthService();
 
@@ -113,7 +113,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
             final screenWidth = MediaQuery.of(context).size.width;
             const bookCardWidth = 120.0;
-            final crossAxisCount = (screenWidth / bookCardWidth).clamp(1, 4).floor();
+            final crossAxisCount =
+                (screenWidth / bookCardWidth).clamp(1, 4).floor();
 
             return Scaffold(
               body: Stack(
@@ -132,7 +133,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                 IconButton(
                                   icon: Icon(
                                     Icons.arrow_back,
-                                    color: Theme.of(context).brightness == Brightness.light
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.light
                                         ? AppColors.lightText
                                         : AppColors.darkText,
                                   ),
@@ -145,12 +147,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                     IconButton(
                                       icon: Icon(
                                         Icons.bookmark_border,
-                                        color: Theme.of(context).brightness == Brightness.light
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.light
                                             ? AppColors.lightText
                                             : AppColors.darkText,
                                       ),
                                       onPressed: () {
-                                        // TODO: Implement bookmarks navigation
                                       },
                                     ),
                                     IconButton(
@@ -166,25 +168,26 @@ class _LibraryScreenState extends State<LibraryScreen> {
                                         ),
                                         child: photoUrl != null
                                             ? ClipOval(
-                                          child: Image.network(
-                                            photoUrl,
-                                            fit: BoxFit.cover,
-                                            width: 40,
-                                            height: 40,
-                                            errorBuilder: (context, error, stackTrace) {
-                                              return const Icon(
+                                                child: Image.network(
+                                                  photoUrl,
+                                                  fit: BoxFit.cover,
+                                                  width: 40,
+                                                  height: 40,
+                                                  errorBuilder: (context, error,
+                                                      stackTrace) {
+                                                    return const Icon(
+                                                      Icons.person,
+                                                      size: 24,
+                                                      color: Colors.grey,
+                                                    );
+                                                  },
+                                                ),
+                                              )
+                                            : const Icon(
                                                 Icons.person,
                                                 size: 24,
                                                 color: Colors.grey,
-                                              );
-                                            },
-                                          ),
-                                        )
-                                            : const Icon(
-                                          Icons.person,
-                                          size: 24,
-                                          color: Colors.grey,
-                                        ),
+                                              ),
                                       ),
                                     ),
                                   ],
@@ -197,30 +200,40 @@ class _LibraryScreenState extends State<LibraryScreen> {
                               children: [
                                 Text(
                                   "My Library",
-                                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Theme.of(context).brightness == Brightness.light
-                                        ? AppColors.lightText
-                                        : AppColors.darkText,
-                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.light
+                                            ? AppColors.lightText
+                                            : AppColors.darkText,
+                                      ),
                                 ),
                                 Row(
                                   children: [
                                     Icon(
                                       Icons.book,
                                       size: 16,
-                                      color: Theme.of(context).brightness == Brightness.light
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.light
                                           ? AppColors.lightSecondaryText
                                           : AppColors.darkSecondaryText,
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
                                       "${books.length} books",
-                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        color: Theme.of(context).brightness == Brightness.light
-                                            ? AppColors.lightSecondaryText
-                                            : AppColors.darkSecondaryText,
-                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: Theme.of(context)
+                                                        .brightness ==
+                                                    Brightness.light
+                                                ? AppColors.lightSecondaryText
+                                                : AppColors.darkSecondaryText,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -230,7 +243,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
                             GridView.builder(
                               physics: const NeverScrollableScrollPhysics(),
                               shrinkWrap: true,
-                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: crossAxisCount,
                                 crossAxisSpacing: 8.0,
                                 mainAxisSpacing: 8.0,
@@ -270,8 +284,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
     );
   }
 
-  Widget _buildBookCard(
-      BuildContext context, String title, String author, String imagePath, bool isCompleted) {
+  Widget _buildBookCard(BuildContext context, String title, String author,
+      String imagePath, bool isCompleted) {
     return Stack(
       children: [
         Container(
@@ -307,9 +321,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   Text(
                     "Done",
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.white,
-                      fontSize: 12,
-                    ),
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
                   ),
                 ],
               ),

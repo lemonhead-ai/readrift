@@ -1,16 +1,16 @@
-import 'package:ReadRift/security/auth_service.dart';
+import 'package:readrift/security/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ReadRift/theme.dart';
+import 'package:readrift/theme.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
   @override
-  _SignUpScreenState createState() => _SignUpScreenState();
+  SignUpScreenState createState() => SignUpScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -47,7 +47,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     if (password.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Password must be at least 6 characters long")),
+        const SnackBar(
+            content: Text("Password must be at least 6 characters long")),
       );
       setState(() {
         _isLoading = false;
@@ -60,11 +61,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
       email: email,
       password: password,
     );
-
+    if (!mounted) return;
     setState(() {
       _isLoading = false;
     });
-
+    if (!mounted) return;
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error)),
@@ -100,22 +101,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 Text(
                   "Start\nyour journey.",
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 50,
-                    fontFamily: 'FuturaPT',
-                    color: AppColors.accentOrange,
-                  ),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 50,
+                        fontFamily: 'FuturaPT',
+                        color: AppColors.accentOrange,
+                      ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   "Create an account to explore unlimited stories.",
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontFamily: 'FuturaPT',
-                    fontSize: 20,
-                    color: Theme.of(context).brightness == Brightness.light
-                        ? AppColors.lightSecondaryText
-                        : AppColors.darkSecondaryText,
-                  ),
+                        fontFamily: 'FuturaPT',
+                        fontSize: 20,
+                        color: Theme.of(context).brightness == Brightness.light
+                            ? AppColors.lightSecondaryText
+                            : AppColors.darkSecondaryText,
+                      ),
                 ),
                 const SizedBox(height: 32),
                 TextField(
@@ -132,8 +133,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     enabledBorder: UnderlineInputBorder(
                       borderSide: BorderSide(
                         color: Theme.of(context).brightness == Brightness.light
-                            ? AppColors.lightSecondaryText.withOpacity(0.3)
-                            : AppColors.darkSecondaryText.withOpacity(0.3),
+                            ? AppColors.lightSecondaryText
+                                .withAlpha((0.3 * 255).toInt())
+                            : AppColors.darkSecondaryText
+                                .withAlpha((0.3 * 255).toInt()),
                       ),
                     ),
                     focusedBorder: UnderlineInputBorder(
@@ -143,10 +146,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                   ),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).brightness == Brightness.light
-                        ? AppColors.lightText
-                        : AppColors.darkText,
-                  ),
+                        color: Theme.of(context).brightness == Brightness.light
+                            ? AppColors.lightText
+                            : AppColors.darkText,
+                      ),
                 ),
                 const SizedBox(height: 24),
                 TextField(
@@ -163,8 +166,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     enabledBorder: UnderlineInputBorder(
                       borderSide: BorderSide(
                         color: Theme.of(context).brightness == Brightness.light
-                            ? AppColors.lightSecondaryText.withOpacity(0.3)
-                            : AppColors.darkSecondaryText.withOpacity(0.3),
+                            ? AppColors.lightSecondaryText
+                                .withAlpha((0.3 * 255).toInt())
+                            : AppColors.darkSecondaryText
+                                .withAlpha((0.3 * 255).toInt()),
                       ),
                     ),
                     focusedBorder: UnderlineInputBorder(
@@ -174,10 +179,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                   ),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).brightness == Brightness.light
-                        ? AppColors.lightText
-                        : AppColors.darkText,
-                  ),
+                        color: Theme.of(context).brightness == Brightness.light
+                            ? AppColors.lightText
+                            : AppColors.darkText,
+                      ),
                   keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 24),
@@ -195,8 +200,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     enabledBorder: UnderlineInputBorder(
                       borderSide: BorderSide(
                         color: Theme.of(context).brightness == Brightness.light
-                            ? AppColors.lightSecondaryText.withOpacity(0.3)
-                            : AppColors.darkSecondaryText.withOpacity(0.3),
+                            ? AppColors.lightSecondaryText
+                                .withAlpha((0.3 * 255).toInt())
+                            : AppColors.darkSecondaryText
+                                .withAlpha((0.3 * 255).toInt()),
                       ),
                     ),
                     focusedBorder: UnderlineInputBorder(
@@ -206,10 +213,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                   ),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).brightness == Brightness.light
-                        ? AppColors.lightText
-                        : AppColors.darkText,
-                  ),
+                        color: Theme.of(context).brightness == Brightness.light
+                            ? AppColors.lightText
+                            : AppColors.darkText,
+                      ),
                   obscureText: true,
                 ),
                 const SizedBox(height: 24),
@@ -217,19 +224,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator()
                       : ElevatedButton(
-                    onPressed: _handleSignUp,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-                    ),
-                    child: Text(
-                      "Sign up",
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppColors.warmWhite,
-                        fontFamily: 'FuturaPT',
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
+                          onPressed: _handleSignUp,
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 7),
+                          ),
+                          child: Text(
+                            "Sign up",
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      color: AppColors.warmWhite,
+                                      fontFamily: 'FuturaPT',
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                          ),
+                        ),
                 ),
                 const SizedBox(height: 24),
                 Center(
@@ -239,12 +248,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       Text(
                         "Already have an account? ",
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).brightness == Brightness.light
-                              ? AppColors.lightSecondaryText
-                              : AppColors.darkSecondaryText,
-                          fontFamily: 'FuturaPT',
-                          fontWeight: FontWeight.w500,
-                        ),
+                              color: Theme.of(context).brightness ==
+                                      Brightness.light
+                                  ? AppColors.lightSecondaryText
+                                  : AppColors.darkSecondaryText,
+                              fontFamily: 'FuturaPT',
+                              fontWeight: FontWeight.w500,
+                            ),
                       ),
                       GestureDetector(
                         onTap: () {
@@ -252,11 +262,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         },
                         child: Text(
                           "Log in",
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.accentOrange,
-                            fontWeight: FontWeight.w500,
-                            fontFamily: 'FuturaPT',
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.accentOrange,
+                                    fontWeight: FontWeight.w500,
+                                    fontFamily: 'FuturaPT',
+                                  ),
                         ),
                       ),
                     ],

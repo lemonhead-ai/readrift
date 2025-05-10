@@ -26,7 +26,8 @@ class AuthService {
     required String username,
   }) async {
     try {
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -84,37 +85,26 @@ class AuthService {
     try {
       User? user = _auth.currentUser;
       if (user == null) {
-        print("No user is currently signed in.");
         return "No user is currently signed in.";
       }
-      // Force refresh the authentication token
-      print("User before token refresh: ${user.uid}, Email: ${user.email}");
-      String? token = await user.getIdToken(true); // Force refresh
-      print("Token after refresh: $token");
-
       // Upload the photo to Firebase Storage
-      String filePath = 'profile_photos/${user.uid}/${DateTime.now().millisecondsSinceEpoch}.jpg';
-      print("Uploading to path: $filePath");
+      String filePath =
+          'profile_photos/${user.uid}/${DateTime.now().millisecondsSinceEpoch}.jpg';
       UploadTask uploadTask = _storage.ref(filePath).putFile(photoFile);
       TaskSnapshot snapshot = await uploadTask;
-      print("File uploaded successfully");
       String photoUrl = await snapshot.ref.getDownloadURL();
-      print("Download URL: $photoUrl");
 
       // Update the user's photoURL in Firebase Authentication
       await user.updatePhotoURL(photoUrl);
       await user.reload();
-      print("Updated photoURL in Firebase Auth");
 
       // Update the photoURL in Firestore
       await _firestore.collection('users').doc(user.uid).update({
         'photoUrl': photoUrl,
       });
-      print("Updated photoURL in Firestore");
 
       return null; // Success, no error
     } catch (e) {
-      print("Upload error: $e");
       return "Failed to update profile photo: $e";
     }
   }

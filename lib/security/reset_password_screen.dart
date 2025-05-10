@@ -1,17 +1,16 @@
-import 'package:ReadRift/security/auth_service.dart';
+import 'package:readrift/security/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ReadRift/theme.dart';
-
+import 'package:readrift/theme.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
 
   @override
-  _ResetPasswordScreenState createState() => _ResetPasswordScreenState();
+  ResetPasswordScreenState createState() => ResetPasswordScreenState();
 }
 
-class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
+class ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final TextEditingController _emailController = TextEditingController();
   final AuthService _authService = AuthService();
   bool _isLinkSent = false;
@@ -42,6 +41,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     }
 
     String? error = await _authService.sendPasswordResetEmail(email);
+
+    if (!mounted) return;
 
     setState(() {
       _isLoading = false;
@@ -88,24 +89,26 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   children: [
                     Text(
                       "Reset\nyour story.",
-                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        fontFamily: 'FuturaPT',
-                        fontWeight: FontWeight.w800,
-                        fontSize: 60,
-                        color: AppColors.accentOrange,
-                      ),
+                      style:
+                          Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                fontFamily: 'FuturaPT',
+                                fontWeight: FontWeight.w800,
+                                fontSize: 60,
+                                color: AppColors.accentOrange,
+                              ),
                     ),
                     const SizedBox(height: 16),
                     Text(
                       "Enter your email to receive a password reset link.",
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).brightness == Brightness.light
-                            ? AppColors.lightSecondaryText
-                            : AppColors.darkSecondaryText,
-                        fontSize: 20,
-                        fontFamily: 'FuturaPT',
-                        fontWeight: FontWeight.w500,
-                      ),
+                            color:
+                                Theme.of(context).brightness == Brightness.light
+                                    ? AppColors.lightSecondaryText
+                                    : AppColors.darkSecondaryText,
+                            fontSize: 20,
+                            fontFamily: 'FuturaPT',
+                            fontWeight: FontWeight.w500,
+                          ),
                     ),
                     const SizedBox(height: 32),
                     if (!_isLinkSent) ...[
@@ -114,15 +117,19 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         decoration: InputDecoration(
                           hintText: "Enter your email",
                           hintStyle: TextStyle(
-                            color: Theme.of(context).brightness == Brightness.light
-                                ? AppColors.lightSecondaryText
-                                : AppColors.darkSecondaryText,
+                            color:
+                                Theme.of(context).brightness == Brightness.light
+                                    ? AppColors.lightSecondaryText
+                                    : AppColors.darkSecondaryText,
                           ),
                           enabledBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
-                              color: Theme.of(context).brightness == Brightness.light
-                                  ? AppColors.lightSecondaryText.withOpacity(0.3)
-                                  : AppColors.darkSecondaryText.withOpacity(0.3),
+                              color: Theme.of(context).brightness ==
+                                      Brightness.light
+                                  ? AppColors.lightSecondaryText
+                                      .withAlpha((0.3 * 255).toInt())
+                                  : AppColors.darkSecondaryText
+                                      .withAlpha((0.3 * 255).toInt()),
                             ),
                           ),
                           focusedBorder: UnderlineInputBorder(
@@ -132,10 +139,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           ),
                         ),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).brightness == Brightness.light
-                              ? AppColors.lightText
-                              : AppColors.darkText,
-                        ),
+                              color: Theme.of(context).brightness ==
+                                      Brightness.light
+                                  ? AppColors.lightText
+                                  : AppColors.darkText,
+                            ),
                         keyboardType: TextInputType.emailAddress,
                       ),
                       const SizedBox(height: 32),
@@ -143,30 +151,36 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         child: _isLoading
                             ? const CircularProgressIndicator()
                             : ElevatedButton(
-                          onPressed: _sendResetLink,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                          ),
-                          child: Text(
-                            "Send reset link",
-                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.warmWhite,
-                              fontFamily: 'FuturaPT',
-                            ),
-                          ),
-                        ),
+                                onPressed: _sendResetLink,
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 10),
+                                ),
+                                child: Text(
+                                  "Send reset link",
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.warmWhite,
+                                        fontFamily: 'FuturaPT',
+                                      ),
+                                ),
+                              ),
                       ),
                     ],
                     if (_isLinkSent)
                       Center(
                         child: Text(
                           "A reset link has been sent to your email.",
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).brightness == Brightness.light
-                                ? AppColors.lightText
-                                : AppColors.darkText,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.light
+                                        ? AppColors.lightText
+                                        : AppColors.darkText,
+                                  ),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -181,11 +195,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   child: Text(
                     "Back to login",
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.accentOrange,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: 'FuturaPT',
-                      fontSize: 16,
-                    ),
+                          color: AppColors.accentOrange,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'FuturaPT',
+                          fontSize: 16,
+                        ),
                   ),
                 ),
               ),

@@ -1,17 +1,17 @@
-import 'package:ReadRift/models/blurred_status_bar.dart';
-import 'package:ReadRift/security/auth_service.dart';
-import 'package:ReadRift/security/reset_password_screen.dart';
+import 'package:readrift/models/blurred_status_bar.dart';
+import 'package:readrift/security/auth_service.dart';
+import 'package:readrift/security/reset_password_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
-import 'package:ReadRift/screens/home_screen.dart';
-import 'package:ReadRift/screens/profile_screen.dart';
-import 'package:ReadRift/screens/search_screen.dart';
-import 'package:ReadRift/screens/library_screen.dart';
-import 'package:ReadRift/screens/welcome_screen.dart';
-import 'package:ReadRift/screens/login_screen.dart';
-import 'package:ReadRift/screens/signup_screen.dart';
-import 'package:ReadRift/theme.dart';
+import 'package:readrift/screens/home_screen.dart';
+import 'package:readrift/screens/profile_screen.dart';
+import 'package:readrift/screens/search_screen.dart';
+import 'package:readrift/screens/library_screen.dart';
+import 'package:readrift/screens/welcome_screen.dart';
+import 'package:readrift/screens/login_screen.dart';
+import 'package:readrift/screens/signup_screen.dart';
+import 'package:readrift/theme.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
@@ -23,7 +23,8 @@ void main() async {
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarBrightness: Brightness.dark, // For iOS
-      statusBarIconBrightness: Brightness.dark, // For Android (dark icons in light mode)
+      statusBarIconBrightness:
+          Brightness.dark, // For Android (dark icons in light mode)
     ),
   );
 
@@ -99,12 +100,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Update status bar icon brightness based on theme
-    final isLightMode = MediaQuery.of(context).platformBrightness == Brightness.light;
+    final isLightMode =
+        MediaQuery.of(context).platformBrightness == Brightness.light;
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarBrightness: isLightMode ? Brightness.dark : Brightness.light,
-        statusBarIconBrightness: isLightMode ? Brightness.dark : Brightness.light,
+        statusBarIconBrightness:
+            isLightMode ? Brightness.dark : Brightness.light,
       ),
     );
 

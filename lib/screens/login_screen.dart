@@ -1,16 +1,16 @@
-import 'package:ReadRift/security/auth_service.dart';
+import 'package:readrift/security/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ReadRift/theme.dart';
+import 'package:readrift/theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  LoginScreenState createState() => LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
@@ -43,10 +43,12 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     String? error = await _authService.signIn(email: email, password: password);
+    if (!mounted) return;
 
     setState(() {
       _isLoading = false;
     });
+    if (!mounted) return;
 
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -83,23 +85,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 Text(
                   "And the\nstory goes on.",
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 50,
-                    fontFamily: 'FuturaPT',
-                    color: AppColors.accentOrange,
-                  ),
+                        fontWeight: FontWeight.w800,
+                        fontSize: 50,
+                        fontFamily: 'FuturaPT',
+                        color: AppColors.accentOrange,
+                      ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   "Welcome back. Enter your credentials to access your account.",
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).brightness == Brightness.light
-                        ? AppColors.lightSecondaryText
-                        : AppColors.darkSecondaryText,
-                    fontFamily: 'FuturaPT',
-                    fontWeight: FontWeight.w500,
-                    fontSize: 20,
-                  ),
+                        color: Theme.of(context).brightness == Brightness.light
+                            ? AppColors.lightSecondaryText
+                            : AppColors.darkSecondaryText,
+                        fontFamily: 'FuturaPT',
+                        fontWeight: FontWeight.w500,
+                        fontSize: 20,
+                      ),
                 ),
                 const SizedBox(height: 32),
                 TextField(
@@ -116,8 +118,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     enabledBorder: UnderlineInputBorder(
                       borderSide: BorderSide(
                         color: Theme.of(context).brightness == Brightness.light
-                            ? AppColors.lightSecondaryText.withOpacity(0.3)
-                            : AppColors.darkSecondaryText.withOpacity(0.3),
+                            ? AppColors.lightSecondaryText
+                                .withAlpha((0.3 * 255).toInt())
+                            : AppColors.darkSecondaryText
+                                .withAlpha((0.3 * 255).toInt()),
                       ),
                     ),
                     focusedBorder: UnderlineInputBorder(
@@ -127,10 +131,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).brightness == Brightness.light
-                        ? AppColors.lightText
-                        : AppColors.darkText,
-                  ),
+                        color: Theme.of(context).brightness == Brightness.light
+                            ? AppColors.lightText
+                            : AppColors.darkText,
+                      ),
                   keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 24),
@@ -148,8 +152,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     enabledBorder: UnderlineInputBorder(
                       borderSide: BorderSide(
                         color: Theme.of(context).brightness == Brightness.light
-                            ? AppColors.lightSecondaryText.withOpacity(0.3)
-                            : AppColors.darkSecondaryText.withOpacity(0.3),
+                            ? AppColors.lightSecondaryText
+                                .withAlpha((0.3 * 255).toInt())
+                            : AppColors.darkSecondaryText
+                                .withAlpha((0.3 * 255).toInt()),
                       ),
                     ),
                     focusedBorder: UnderlineInputBorder(
@@ -159,10 +165,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).brightness == Brightness.light
-                        ? AppColors.lightText
-                        : AppColors.darkText,
-                  ),
+                        color: Theme.of(context).brightness == Brightness.light
+                            ? AppColors.lightText
+                            : AppColors.darkText,
+                      ),
                   obscureText: true,
                 ),
                 const SizedBox(height: 32),
@@ -170,19 +176,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: _isLoading
                       ? const CircularProgressIndicator()
                       : ElevatedButton(
-                    onPressed: _handleLogin,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-                    ),
-                    child: Text(
-                      "Log in",
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.warmWhite,
-                        fontFamily: 'FuturaPT',
-                      ),
-                    ),
-                  ),
+                          onPressed: _handleLogin,
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 7),
+                          ),
+                          child: Text(
+                            "Log in",
+                            style:
+                                Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.warmWhite,
+                                      fontFamily: 'FuturaPT',
+                                    ),
+                          ),
+                        ),
                 ),
                 const SizedBox(height: 24),
                 Center(
@@ -192,12 +200,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       Text(
                         "Forgot your password? ",
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).brightness == Brightness.light
-                              ? AppColors.lightSecondaryText
-                              : AppColors.darkSecondaryText,
-                          fontFamily: 'FuturaPT',
-                          fontWeight: FontWeight.w500,
-                        ),
+                              color: Theme.of(context).brightness ==
+                                      Brightness.light
+                                  ? AppColors.lightSecondaryText
+                                  : AppColors.darkSecondaryText,
+                              fontFamily: 'FuturaPT',
+                              fontWeight: FontWeight.w500,
+                            ),
                       ),
                       GestureDetector(
                         onTap: () {
@@ -205,11 +214,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                         child: Text(
                           "Reset password",
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.accentOrange,
-                            fontWeight: FontWeight.w500,
-                            fontFamily: 'FuturaPT',
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.accentOrange,
+                                    fontWeight: FontWeight.w500,
+                                    fontFamily: 'FuturaPT',
+                                  ),
                         ),
                       ),
                     ],
