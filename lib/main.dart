@@ -11,8 +11,13 @@ import 'package:readrift/screens/library_screen.dart';
 import 'package:readrift/screens/welcome_screen.dart';
 import 'package:readrift/screens/login_screen.dart';
 import 'package:readrift/screens/signup_screen.dart';
+import 'package:readrift/screens/notifications_screen.dart';
+import 'package:readrift/screens/bookmarks_screen.dart';
+import 'package:readrift/screens/subscription_screen.dart';
+import 'package:readrift/screens/account_settings_screen.dart';
 import 'package:readrift/theme.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:readrift/theme/page_transitions.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,7 +39,7 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  static final GoRouter _router = GoRouter(
+  static final router = GoRouter(
     initialLocation: '/welcome',
     routes: [
       GoRoute(
@@ -69,6 +74,22 @@ class MyApp extends StatelessWidget {
         path: '/reset-password',
         builder: (context, state) => const ResetPasswordScreen(),
       ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/bookmarks',
+        builder: (context, state) => const BookmarksScreen(),
+      ),
+      GoRoute(
+        path: '/subscription',
+        builder: (context, state) => const SubscriptionScreen(),
+      ),
+      GoRoute(
+        path: '/account-settings',
+        builder: (context, state) => const AccountSettingsScreen(),
+      ),
     ],
     redirect: (BuildContext context, GoRouterState state) {
       final authService = AuthService();
@@ -89,7 +110,11 @@ class MyApp extends StatelessWidget {
           (state.matchedLocation == '/' ||
               state.matchedLocation == '/profile' ||
               state.matchedLocation == '/search' ||
-              state.matchedLocation == '/library')) {
+              state.matchedLocation == '/library' ||
+              state.matchedLocation == '/notifications' ||
+              state.matchedLocation == '/bookmarks' ||
+              state.matchedLocation == '/subscription' ||
+              state.matchedLocation == '/account-settings')) {
         return '/welcome';
       }
 
@@ -115,10 +140,11 @@ class MyApp extends StatelessWidget {
       textDirection: TextDirection.ltr,
       child: BlurredStatusBar(
         child: MaterialApp.router(
+          title: 'ReadRift',
           theme: lightTheme(),
           darkTheme: darkTheme(),
           themeMode: ThemeMode.system,
-          routerConfig: _router,
+          routerConfig: router,
           debugShowCheckedModeBanner: false,
         ),
       ),
