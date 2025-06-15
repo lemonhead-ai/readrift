@@ -139,7 +139,9 @@ class NotificationsScreenState extends State<NotificationsScreen> {
                         margin: const EdgeInsets.only(bottom: 12.0),
                         color: notification['isRead']
                             ? Theme.of(context).cardColor
-                            : Theme.of(context).cardColor.withOpacity(0.8),
+                            : Theme.of(context)
+                                .cardColor
+                                .withValues(alpha: 0.8),
                         child: ListTile(
                           contentPadding: const EdgeInsets.all(16.0),
                           leading: CircleAvatar(

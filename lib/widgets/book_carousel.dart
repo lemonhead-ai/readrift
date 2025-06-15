@@ -99,7 +99,7 @@ class _BookCarouselState extends State<BookCarousel> {
                           boxShadow: [
                             BoxShadow(
                               color: const Color.fromARGB(255, 0, 0, 0)
-                                  .withOpacity(0.1),
+                                  .withValues(alpha: 0.1),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -147,7 +147,7 @@ class _BookCarouselState extends State<BookCarousel> {
                                           color: Theme.of(context)
                                               .colorScheme
                                               .onSurface
-                                              .withOpacity(0.7),
+                                              .withValues(alpha: 0.7),
                                           fontSize: 16,
                                         ),
                                   ),

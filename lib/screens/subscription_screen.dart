@@ -234,7 +234,7 @@ class SubscriptionScreenState extends State<SubscriptionScreen> {
           border: Border.all(
             color: isSelected
                 ? AppColors.accentOrange
-                : Colors.grey.withOpacity(0.3),
+                : Colors.grey.withValues(alpha: 0.3),
             width: 2,
           ),
         ),
@@ -275,7 +275,7 @@ class SubscriptionScreenState extends State<SubscriptionScreen> {
               'per $period',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: isSelected
-                        ? Colors.white.withOpacity(0.8)
+                        ? Colors.white.withValues(alpha: 0.8)
                         : Colors.grey,
                   ),
             ),
@@ -298,7 +298,7 @@ class SubscriptionScreenState extends State<SubscriptionScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.accentOrange.withOpacity(0.1),
+              color: AppColors.accentOrange.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
