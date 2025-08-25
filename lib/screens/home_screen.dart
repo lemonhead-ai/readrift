@@ -188,7 +188,7 @@ class HomeScreenState extends State<HomeScreen> {
                             TextSpan(
                               children: [
                                 const TextSpan(text: "You're currently reading "),
-                                TextSpan(text: currentBook?.title ?? "none", style: const TextStyle(color: Colors.orange)),
+                                TextSpan(text: currentBook?.title ?? "None", style: const TextStyle(color: Colors.orange)),
                                 const TextSpan(text: ". You have 📚 "),
                                 TextSpan(text: "$libraryCount books ", style: const TextStyle(color: Colors.orange)),
                                 const TextSpan(text: "in progress. You're free to read for 🕒 "),
