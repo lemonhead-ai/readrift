@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'package:readrift/screens/dock.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
+import 'dart:async';
+import 'package:readrift/widgets/book_carousel.dart';
+import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,6 +19,53 @@ class HomeScreen extends StatefulWidget {
 class HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   final AuthService _authService = AuthService();
+  DateTime _currentTime = DateTime.now();
+  late Timer _timer;
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      setState(() {
+        _currentTime = DateTime.now();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  String _getDayOfWeek() {
+    return DateFormat('EEE').format(_currentTime);
+  }
+
+  String _getFormattedDate() {
+    return DateFormat('MMMM, d\n yyyy').format(_currentTime);
+  }
+
+  String _getRemainingReadingTime() {
+    final now = DateTime.now();
+    final endTime = DateTime(now.year, now.month, now.day, 20, 0); // 8 PM
+    final difference = endTime.difference(now);
+
+    if (difference.isNegative) {
+      return "0 mins";
+    }
+
+    final hours = difference.inHours;
+    final minutes = difference.inMinutes % 60;
+
+    if (hours > 0) {
+      return "$hours hrs ${minutes > 0 ? '$minutes mins' : ''}";
+    } else {
+      return "$minutes mins";
+    }
+  }
 
   void _onNavIconTapped(int index) {
     setState(() {
@@ -73,6 +124,8 @@ class HomeScreenState extends State<HomeScreen> {
                   SafeArea(
                     bottom: false,
                     child: SingleChildScrollView(
+                      controller: _scrollController,
+                      physics: const BouncingScrollPhysics(),
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
@@ -82,7 +135,7 @@ class HomeScreenState extends State<HomeScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  "Wed",
+                                  _getDayOfWeek(),
                                   style: Theme.of(context)
                                       .textTheme
                                       .headlineMedium
@@ -94,7 +147,7 @@ class HomeScreenState extends State<HomeScreen> {
                                       ),
                                 ),
                                 Text(
-                                  "November, 23\n 2025",
+                                  _getFormattedDate(),
                                   style: Theme.of(context)
                                       .textTheme
                                       .bodyMedium
@@ -169,56 +222,36 @@ class HomeScreenState extends State<HomeScreen> {
                                 const SizedBox(width: 8),
                               ],
                             ),
-                            const SizedBox(height: 24),
-                            SizedBox(
-                              height: 300,
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  Positioned(
-                                    left: 10,
-                                    top: 0,
-                                    child: Transform.rotate(
-                                      angle: math.pi / 24,
-                                      child: const BookCard(
-                                        imagePath: "assets/1984.png",
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    left: 80,
-                                    top: 90,
-                                    child: Transform.rotate(
-                                      angle: -math.pi / 24,
-                                      child: const BookCard(
-                                        imagePath: "assets/atomic_habits.png",
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    right: 80,
-                                    top: 0,
-                                    child: Transform.rotate(
-                                      angle: math.pi / 24,
-                                      child: const BookCard(
-                                        imagePath: "assets/harry_potter.png",
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    right: 10,
-                                    top: 90,
-                                    child: Transform.rotate(
-                                      angle: -math.pi / 24,
-                                      child: const BookCard(
-                                        imagePath: "assets/hooked.png",
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            const SizedBox(height: 16),
+                            BookCarousel(
+                              title: 'Shelf',
+                              books: const [
+                                BookItem(
+                                  title: '1984',
+                                  author: 'George Orwell',
+                                  imagePath: 'assets/1984.png',
+                                ),
+                                BookItem(
+                                  title: 'Atomic Habits',
+                                  author: 'James Clear',
+                                  imagePath: 'assets/atomic_habits.png',
+                                ),
+                                BookItem(
+                                  title: 'Harry Potter',
+                                  author: 'J.K. Rowling',
+                                  imagePath: 'assets/harry_potter.png',
+                                ),
+                                BookItem(
+                                  title: 'Hooked',
+                                  author: 'Nir Eyal',
+                                  imagePath: 'assets/hooked.png',
+                                ),
+                              ],
+                              onViewAll: () {
+                                context.go('/library');
+                              },
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 8),
                             Text.rich(
                               TextSpan(
                                 children: [
@@ -263,20 +296,13 @@ class HomeScreenState extends State<HomeScreen> {
                                         ?.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                   TextSpan(
-                                    text: "45 mins",
+                                    text: _getRemainingReadingTime(),
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyLarge
                                         ?.copyWith(
                                             fontWeight: FontWeight.bold,
                                             color: Colors.orange),
-                                  ),
-                                  TextSpan(
-                                    text: " after 8 PM.",
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyLarge
-                                        ?.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                 ],
                               ),
@@ -429,6 +455,7 @@ class HomeScreenState extends State<HomeScreen> {
                     child: Dock(
                       selectedIndex: _selectedIndex,
                       onItemTapped: _onNavIconTapped,
+                      scrollController: _scrollController,
                     ),
                   ),
                 ],

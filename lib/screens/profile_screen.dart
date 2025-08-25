@@ -6,6 +6,7 @@ import 'package:readrift/screens/dock.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:readrift/widgets/glass_card.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -18,6 +19,13 @@ class ProfileScreenState extends State<ProfileScreen> {
   int _selectedIndex = 3;
   final AuthService _authService = AuthService();
   final ImagePicker _picker = ImagePicker();
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   void _onNavIconTapped(int index) {
     setState(() {
@@ -99,6 +107,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                   SafeArea(
                     bottom: false,
                     child: SingleChildScrollView(
+                      controller: _scrollController,
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
@@ -221,31 +230,48 @@ class ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ),
                             const SizedBox(height: 24),
-                            _buildOptionTile(
-                              context,
-                              icon: Icons.notifications_outlined,
-                              title: "Notifications",
-                              hasBadge: true,
-                              badgeCount: 2,
-                              onTap: () {},
-                            ),
-                            _buildOptionTile(
-                              context,
-                              icon: Icons.bookmark_border,
-                              title: "Bookmarks",
-                              onTap: () {},
-                            ),
-                            _buildOptionTile(
-                              context,
-                              icon: Icons.star_border,
-                              title: "Subscription plan",
-                              onTap: () {},
-                            ),
-                            _buildOptionTile(
-                              context,
-                              icon: Icons.settings_outlined,
-                              title: "Account settings",
-                              onTap: () {},
+                            GlassCard(
+                              child: Column(
+                                children: [
+                                  _buildOptionTile(
+                                    context,
+                                    icon: Icons.notifications_outlined,
+                                    title: "Notifications",
+                                    hasBadge: true,
+                                    badgeCount: 2,
+                                    onTap: () {
+                                      context.go('/notifications');
+                                    },
+                                  ),
+                                  const Divider(),
+                                  _buildOptionTile(
+                                    context,
+                                    icon: Icons.bookmark_border,
+                                    title: "Bookmarks",
+                                    onTap: () {
+                                      context.go('/bookmarks');
+                                    },
+                                  ),
+                                  const Divider(),
+                                  _buildOptionTile(
+                                    context,
+                                    icon: Icons.star_border,
+                                    title: "Subscription plan",
+                                    onTap: () {
+                                      context.go('/subscription');
+                                    },
+                                  ),
+                                  const Divider(),
+                                  _buildOptionTile(
+                                    context,
+                                    icon: Icons.settings_outlined,
+                                    title: "Account settings",
+                                    onTap: () {
+                                      context.go('/account-settings');
+                                    },
+                                  ),
+                                ],
+                              ),
                             ),
                             const SizedBox(height: 24),
                             Row(
@@ -310,6 +336,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                     child: Dock(
                       selectedIndex: _selectedIndex,
                       onItemTapped: _onNavIconTapped,
+                      scrollController: _scrollController,
                     ),
                   ),
                 ],
@@ -363,35 +390,41 @@ class ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildStatItem(BuildContext context, String label, IconData icon) {
-    return Column(
-      children: [
-        Icon(
-          icon,
-          size: 24,
-          color: Theme.of(context).textTheme.bodyMedium?.color,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).textTheme.bodyMedium?.color,
-              ),
-          textAlign: TextAlign.center,
-        ),
-      ],
+    return GlassCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            size: 24,
+            color: Theme.of(context).textTheme.bodyMedium?.color,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildBookshelfItem(BuildContext context, String imagePath) {
-    return Container(
-      margin: const EdgeInsets.only(right: 16),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.asset(
-          imagePath,
-          width: 80,
-          height: 120,
-          fit: BoxFit.cover,
+    return GlassCard(
+      padding: EdgeInsets.zero,
+      child: Container(
+        margin: const EdgeInsets.only(right: 16),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.asset(
+            imagePath,
+            width: 80,
+            height: 120,
+            fit: BoxFit.cover,
+          ),
         ),
       ),
     );
