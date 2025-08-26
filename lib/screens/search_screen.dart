@@ -8,6 +8,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:readrift/models/book.dart';
 import 'package:readrift/services/book_service.dart';
 import 'package:readrift/screens/book_reader_screen.dart';  // Import if adding
+import 'package:readrift/widgets/custom_toast.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -73,7 +74,7 @@ class SearchScreenState extends State<SearchScreen> {
         book.author.toLowerCase().contains(query.toLowerCase())
     ).toList();
 
-    final onlineMatches = await BookService().searchBooks(query);
+    final onlineMatches = await BookService().searchBooks(query, context);
 
     setState(() {
       searchResults = [...localMatches, ...onlineMatches];
@@ -84,11 +85,13 @@ class SearchScreenState extends State<SearchScreen> {
     final authUser = _authService.currentUser;
     if (authUser == null) return;
 
-    await _authService.addBookToLibrary(authUser.uid, book);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("${book.title} added to library!")),
-    );
-    _performSearch(_searchController.text);  // Refresh results
+    try {
+      await _authService.addBookToLibrary(authUser.uid, book);
+      ToastService.showSuccess(context, "${book.title} has been added to your library!");
+      _performSearch(_searchController.text);  // Refresh results
+    } catch (e) {
+      ToastService.showError(context, "Sorry, couldn't add the book to your library");
+    }
   }
 
   @override
@@ -344,7 +347,7 @@ class SearchScreenState extends State<SearchScreen> {
                         ),
                         const SizedBox(height: 12),
                         FutureBuilder<List<Book>>(
-                          future: BookService().getRecommendations(),
+                          future: BookService().getRecommendations(context),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState == ConnectionState.waiting) {
                               return const Center(child: CircularProgressIndicator());

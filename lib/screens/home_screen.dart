@@ -7,6 +7,7 @@ import 'package:readrift/models/book.dart';
 import 'package:readrift/services/book_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:readrift/screens/book_reader_screen.dart';
+import 'package:readrift/widgets/custom_toast.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -113,6 +114,7 @@ class HomeScreenState extends State<HomeScreen> {
                             "Hello, ",
                             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.bold,
+                              fontFamily: 'SFProRounded',
                               color: Theme.of(context).textTheme.bodyMedium?.color,
                             ),
                           ),
@@ -133,7 +135,7 @@ class HomeScreenState extends State<HomeScreen> {
                                 errorBuilder: (context, error, stackTrace) {
                                   return const Icon(
                                     Icons.person,
-                                    size: 24,
+                                    size: 20,
                                     color: Colors.grey,
                                   );
                                 },
@@ -149,6 +151,7 @@ class HomeScreenState extends State<HomeScreen> {
                             " $username",
                             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                               color: Colors.orange,
+                              fontFamily: 'SFProRounded',
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -156,7 +159,7 @@ class HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 34),
                       FutureBuilder<List<Book>>(
-                        future: BookService().getRecommendations(),
+                        future: BookService().getRecommendations(context),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
                             return const Center(child: CircularProgressIndicator());
@@ -164,7 +167,7 @@ class HomeScreenState extends State<HomeScreen> {
                           final books = snapshot.data ?? [];
                           if (books.isEmpty) return const SizedBox();
                           return SizedBox(
-                            height: 300, // Increased height to accommodate larger scale
+                            height: 250, // Increased height to accommodate larger scale
                             child: PageView.builder(
                               controller: _pageController,
                               itemCount: books.length,

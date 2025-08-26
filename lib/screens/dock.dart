@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+
 class Dock extends StatefulWidget {
   final int selectedIndex;
   final Function(int) onItemTapped;
@@ -94,19 +95,24 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
             child: Container(
-              height: 70,
+              height: 72,
               decoration: BoxDecoration(
-                // No color or tint to ensure full transparency
                 borderRadius: BorderRadius.circular(60.0),
                 boxShadow: [
                   BoxShadow(
                     color: brightness == Brightness.light
-                        ? Colors.black.withValues(alpha: 0.1)
+                        ? Colors.black.withValues(alpha: 0.05)
                         : Colors.white.withValues(alpha: 0.05),
                     blurRadius: 40,
                     offset: const Offset(0, 15),
                   ),
                 ],
+                border: Border.all(
+                  color: brightness == Brightness.light
+                      ? Colors.grey.withValues(alpha: 0.25)
+                      : Colors.grey.withValues(alpha: 0.25),
+                  width: 1.5,
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -181,7 +187,7 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
             : null,
         child: Icon(
           icon,
-          size: 30,
+          size: 28,
           color: isSelected
               ? Theme.of(context).bottomNavigationBarTheme.selectedItemColor
               : Theme.of(context).bottomNavigationBarTheme.unselectedItemColor,

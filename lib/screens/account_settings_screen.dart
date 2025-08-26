@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:readrift/screens/dock.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:readrift/theme.dart';
+import 'package:readrift/widgets/custom_toast.dart';
 
 class AccountSettingsScreen extends StatefulWidget {
   const AccountSettingsScreen({super.key});
@@ -30,6 +31,7 @@ class AccountSettingsScreenState extends State<AccountSettingsScreen> {
     setState(() {
       _isDarkMode = value;
     });
+    ToastService.showSuccess(context, 'Dark mode has been ${value ? 'turned on' : 'turned off'}');
     // In a real app, this would update the app's theme
   }
 
@@ -37,6 +39,7 @@ class AccountSettingsScreenState extends State<AccountSettingsScreen> {
     setState(() {
       _notificationsEnabled = value;
     });
+    ToastService.showSuccess(context, 'Notifications have been ${value ? 'turned on' : 'turned off'}');
     // In a real app, this would update notification settings
   }
 
@@ -44,6 +47,7 @@ class AccountSettingsScreenState extends State<AccountSettingsScreen> {
     setState(() {
       _readingRemindersEnabled = value;
     });
+    ToastService.showSuccess(context, 'Reading reminders have been ${value ? 'turned on' : 'turned off'}');
     // In a real app, this would update reading reminder settings
   }
 
@@ -174,9 +178,7 @@ class AccountSettingsScreenState extends State<AccountSettingsScreen> {
               icon: const Icon(Icons.edit),
               onPressed: () {
                 // In a real app, this would open an edit profile screen
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Edit profile coming soon!')),
-                );
+                ToastService.showInfo(context, 'Profile editing will be available soon!');
               },
             ),
           ),
@@ -248,11 +250,7 @@ class AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       onPressed: () {
                         // In a real app, this would delete the user's account
                         Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Account deletion coming soon!'),
-                          ),
-                        );
+                        ToastService.showInfo(context, 'Account deletion will be available soon!');
                       },
                       child: const Text(
                         'Delete',
