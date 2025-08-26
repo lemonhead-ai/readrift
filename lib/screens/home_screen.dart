@@ -1,15 +1,12 @@
-// lib/screens/home_screen.dart
 import 'package:readrift/security/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 import 'package:readrift/models/book.dart';
 import 'package:readrift/services/book_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:readrift/screens/book_reader_screen.dart';  // Import if adding reader
+import 'package:readrift/screens/book_reader_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,6 +17,13 @@ class HomeScreen extends StatefulWidget {
 
 class HomeScreenState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
+  final PageController _pageController = PageController(viewportFraction: 0.6); // Reduced to show partial views
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,8 +130,7 @@ class HomeScreenState extends State<HomeScreen> {
                                 fit: BoxFit.cover,
                                 width: 35,
                                 height: 35,
-                                errorBuilder:
-                                    (context, error, stackTrace) {
+                                errorBuilder: (context, error, stackTrace) {
                                   return const Icon(
                                     Icons.person,
                                     size: 24,
@@ -151,7 +154,7 @@ class HomeScreenState extends State<HomeScreen> {
                           const SizedBox(width: 8),
                         ],
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 34),
                       FutureBuilder<List<Book>>(
                         future: BookService().getRecommendations(),
                         builder: (context, snapshot) {
@@ -161,15 +164,26 @@ class HomeScreenState extends State<HomeScreen> {
                           final books = snapshot.data ?? [];
                           if (books.isEmpty) return const SizedBox();
                           return SizedBox(
-                            height: 300,
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                if (books.length > 0) Positioned(left: 10, top: 0, child: _buildDynamicBookCard(books[0], math.pi / 24)),
-                                if (books.length > 1) Positioned(left: 80, top: 90, child: _buildDynamicBookCard(books[1], -math.pi / 24)),
-                                if (books.length > 2) Positioned(right: 80, top: 0, child: _buildDynamicBookCard(books[2], math.pi / 24)),
-                                if (books.length > 3) Positioned(right: 10, top: 90, child: _buildDynamicBookCard(books[3], -math.pi / 24)),
-                              ],
+                            height: 300, // Increased height to accommodate larger scale
+                            child: PageView.builder(
+                              controller: _pageController,
+                              itemCount: books.length,
+                              itemBuilder: (context, index) {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => BookReaderScreen(book: books[index]),
+                                        ),
+                                      );
+                                    },
+                                    child: _buildDynamicBookCard(books, books[index], index),
+                                  ),
+                                );
+                              },
                             ),
                           );
                         },
@@ -182,7 +196,7 @@ class HomeScreenState extends State<HomeScreen> {
                             return const CircularProgressIndicator();
                           }
                           final currentBook = snapshot.data;
-                          final libraryCount = 4;  // Replace with actual count from stream
+                          final libraryCount = 4; // Replace with actual count from stream
                           final freeTime = 45;
                           return Text.rich(
                             TextSpan(
@@ -209,7 +223,7 @@ class HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(width: 16),
                           Text(
-                            "📈 15% into Hooked",  // Make dynamic
+                            "📈 15% into Hooked", // Make dynamic
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ],
@@ -241,7 +255,7 @@ class HomeScreenState extends State<HomeScreen> {
                               );
                             },
                             child: SizedBox(
-                              height: 225,
+                              height: 200,
                               child: Stack(
                                 clipBehavior: Clip.none,
                                 children: [
@@ -251,64 +265,45 @@ class HomeScreenState extends State<HomeScreen> {
                                     top: 50,
                                     bottom: 0,
                                     child: Container(
-                                      padding: const EdgeInsets.fromLTRB(
-                                          180, 16, 16, 16),
+                                      padding: const EdgeInsets.fromLTRB(180, 16, 16, 16),
                                       decoration: BoxDecoration(
-                                        color: Theme.of(context).brightness ==
-                                            Brightness.light
+                                        color: Theme.of(context).brightness == Brightness.light
                                             ? Colors.grey[300]
                                             : Colors.grey[800],
                                         borderRadius: BorderRadius.circular(34),
                                       ),
                                       child: Column(
-                                        crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                        mainAxisAlignment:
-                                        MainAxisAlignment.center,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
                                           Text(
                                             "Reading now",
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodySmall
-                                                ?.copyWith(
+                                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                               color: Colors.grey,
                                             ),
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
                                             "${(currentBook.progress * 100).toInt()}%",
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .headlineSmall
-                                                ?.copyWith(
+                                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                               fontWeight: FontWeight.bold,
-                                              color: Theme.of(context)
-                                                  .textTheme
-                                                  .bodyMedium
-                                                  ?.color,
+                                              color: Theme.of(context).textTheme.bodyMedium?.color,
                                             ),
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            "- 5 hours left",  // Make dynamic
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodySmall
-                                                ?.copyWith(
+                                            "- 5 hours left", // Make dynamic
+                                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                               color: Colors.grey,
                                             ),
                                           ),
                                           const SizedBox(height: 8),
                                           LinearProgressIndicator(
-                                            borderRadius:
-                                            BorderRadius.circular(20),
+                                            borderRadius: BorderRadius.circular(20),
                                             value: currentBook.progress,
                                             backgroundColor: Colors.grey[300],
-                                            valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                              Theme.of(context).brightness ==
-                                                  Brightness.light
+                                            valueColor: AlwaysStoppedAnimation<Color>(
+                                              Theme.of(context).brightness == Brightness.light
                                                   ? Colors.black
                                                   : Colors.white,
                                             ),
@@ -328,9 +323,7 @@ class HomeScreenState extends State<HomeScreen> {
                                         decoration: BoxDecoration(
                                           boxShadow: [
                                             BoxShadow(
-                                              color: Theme.of(context)
-                                                  .brightness ==
-                                                  Brightness.light
+                                              color: Theme.of(context).brightness == Brightness.light
                                                   ? Colors.black12
                                                   : Colors.white12,
                                               blurRadius: 8,
@@ -367,36 +360,45 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildDynamicBookCard(Book book, double angle) {
-    return Transform.rotate(
-      angle: angle,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            width: 120,
-            height: 180,
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).brightness == Brightness.light ? Colors.black12 : Colors.white12,
-                  blurRadius: 8,
-                  offset: const Offset(2, 2),
+  Widget _buildDynamicBookCard(List<Book> books, Book book, int index) {
+    return AnimatedBuilder(
+      animation: _pageController,
+      builder: (context, child) {
+        double value = 0.0;
+        if (_pageController.position.hasPixels) {
+          value = index - (_pageController.page ?? 0.0).clamp(0.0, books.length - 1);
+          value = (1 - (value.abs() * 0.3)).clamp(0.0, 2.0); // Scale factor
+        }
+        return Center(
+          child: Transform.scale(
+            scale: value == 0 ? 4.5 : value, // Increased center scale to 3x
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(25),
+              child: Container(
+                width: 300,
+                height: 300, // Adjusted height for scaling
+                decoration: BoxDecoration(
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context).brightness == Brightness.light ? Colors.black12 : Colors.white12,
+                      blurRadius: 8,
+                      offset: const Offset(2, 2),
+                    ),
+                  ],
                 ),
-              ],
+                child: book.coverUrl != null
+                    ? CachedNetworkImage(
+                  imageUrl: book.coverUrl!,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                  errorWidget: (context, url, error) => const Icon(Icons.book),
+                )
+                    : const Icon(Icons.book, size: 120),
+              ),
             ),
-            child: book.coverUrl != null
-                ? CachedNetworkImage(
-              imageUrl: book.coverUrl!,
-              fit: BoxFit.cover,
-              placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-              errorWidget: (context, url, error) => const Icon(Icons.book),
-            )
-                : const Icon(Icons.book, size: 120),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

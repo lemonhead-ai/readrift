@@ -40,8 +40,7 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
       curve: Curves.easeInOut,
     ));
 
-    // Start with the dock visible
-    _animationController.value = 1.0;
+    _animationController.value = 1.0; // Start visible
 
     if (widget.scrollController != null) {
       widget.scrollController!.addListener(_onScroll);
@@ -64,7 +63,6 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
     final isScrollingDown = currentScroll > _lastScrollPosition;
     _lastScrollPosition = currentScroll;
 
-    // Only hide dock when scrolling up and not at the top
     if (!isScrollingDown && currentScroll > 0 && _isVisible) {
       _isVisible = false;
       _animationController.reverse();
@@ -76,6 +74,11 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final tintColor = brightness == Brightness.light
+        ? Colors.white.withOpacity(0.1) // Subtle tint for light mode
+        : Colors.black.withOpacity(0.05); // Subtle tint for dark mode
+
     return AnimatedBuilder(
       animation: _animationController,
       builder: (context, child) {
@@ -92,25 +95,26 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(60.0),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
             child: Container(
-              height: 90,
+              height: 70,
               decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .bottomNavigationBarTheme
-                    .backgroundColor
-                    ?.withValues(alpha: 0.2),
+                color: tintColor, // Light tint instead of solid color
                 borderRadius: BorderRadius.circular(60.0),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 30,
-                    offset: const Offset(0, 10),
+                    color: brightness == Brightness.light
+                        ? Colors.black.withOpacity(0.1)
+                        : Colors.white.withOpacity(0.05),
+                    blurRadius: 40,
+                    offset: const Offset(0, 15),
                   ),
                 ],
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  width: 1.0,
+                  color: brightness == Brightness.light
+                      ? Colors.white.withOpacity(0.2)
+                      : Colors.black.withOpacity(0.2),
+                  width: 1.5,
                 ),
               ),
               child: Row(
@@ -119,7 +123,8 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
                   _buildNavIcon(context, Icons.home_max_rounded, 0),
                   _buildNavIcon(context, Icons.search_rounded, 1),
                   _buildNavIcon(context, Icons.menu_book_rounded, 2),
-                  _buildNavIcon(context, Icons.account_circle_outlined, 3),
+                  _buildNavIcon(context, Icons.bookmark_border_rounded, 3),
+                  _buildNavIcon(context, Icons.account_circle_outlined, 4),
                 ],
               ),
             ),
@@ -131,6 +136,8 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
 
   Widget _buildNavIcon(BuildContext context, IconData icon, int index) {
     final bool isSelected = widget.selectedIndex == index;
+    final brightness = Theme.of(context).brightness;
+
     return GestureDetector(
       onTap: () {
         widget.onItemTapped(index);
@@ -145,6 +152,9 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
             context.go('/library');
             break;
           case 3:
+            context.go('/bookmark');
+            break;
+          case 4:
             context.go('/profile');
             break;
         }
@@ -154,16 +164,29 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
         padding: const EdgeInsets.all(12),
         decoration: isSelected
             ? BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    blurRadius: 10,
-                    spreadRadius: 2,
-                  ),
-                ],
-              )
+          gradient: LinearGradient(
+            colors: [
+              brightness == Brightness.light
+                  ? Colors.white.withOpacity(0.3)
+                  : Colors.black.withOpacity(0.3),
+              brightness == Brightness.light
+                  ? Colors.white.withOpacity(0.1)
+                  : Colors.black.withOpacity(0.1),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: brightness == Brightness.light
+                  ? Colors.white.withOpacity(0.2)
+                  : Colors.black.withOpacity(0.2),
+              blurRadius: 10,
+              spreadRadius: 2,
+            ),
+          ],
+        )
             : null,
         child: Icon(
           icon,
