@@ -181,6 +181,7 @@ class _ScaffoldWithDockState extends State<ScaffoldWithDock> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       //backgroundColor: Colors.transparent,
       body: widget.child,
       bottomNavigationBar: Dock(

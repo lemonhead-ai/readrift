@@ -1,9 +1,6 @@
 import 'package:readrift/security/auth_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:readrift/screens/dock.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:readrift/theme.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -14,7 +11,6 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class NotificationsScreenState extends State<NotificationsScreen> {
-  int _selectedIndex = 3;
   final AuthService _authService = AuthService();
 
   // Mock notifications data - in a real app, this would come from Firestore
@@ -54,11 +50,7 @@ class NotificationsScreenState extends State<NotificationsScreen> {
     },
   ];
 
-  void _onNavIconTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
+  // Dock is handled globally via ShellRoute; no local navigation index needed here.
 
   void _markAsRead(String notificationId) {
     setState(() {
@@ -87,6 +79,7 @@ class NotificationsScreenState extends State<NotificationsScreen> {
     }
 
     return Scaffold(
+      extendBody: true,
       body: Stack(
         children: [
           SafeArea(
@@ -196,13 +189,7 @@ class NotificationsScreenState extends State<NotificationsScreen> {
               ],
             ),
           ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Dock(
-              selectedIndex: _selectedIndex,
-              onItemTapped: _onNavIconTapped,
-            ),
-          ),
+          // Dock is provided globally by ScaffoldWithDock in ShellRoute
         ],
       ),
     );
