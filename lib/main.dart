@@ -182,7 +182,7 @@ class _ScaffoldWithDockState extends State<ScaffoldWithDock> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      //backgroundColor: Colors.transparent,
+      backgroundColor: Colors.transparent,
       body: widget.child,
       bottomNavigationBar: Dock(
         selectedIndex: _selectedIndex,

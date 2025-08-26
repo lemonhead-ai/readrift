@@ -75,8 +75,6 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    // Fully transparent tint to avoid any opaque backdrop; rely on blur and shadow only
-    final tintColor = Colors.transparent;
 
     return AnimatedBuilder(
       animation: _animationController,
@@ -98,19 +96,17 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
             child: Container(
               height: 70,
               decoration: BoxDecoration(
-                // No fill color to keep the dock floating/transparent
-                color: tintColor,
+                // No color or tint to ensure full transparency
                 borderRadius: BorderRadius.circular(60.0),
                 boxShadow: [
                   BoxShadow(
                     color: brightness == Brightness.light
-                        ? Colors.black.withOpacity(0.1)
-                        : Colors.white.withOpacity(0.05),
+                        ? Colors.black.withValues(alpha: 0.1)
+                        : Colors.white.withValues(alpha: 0.05),
                     blurRadius: 40,
                     offset: const Offset(0, 15),
                   ),
                 ],
-                // Remove border so no gray/black edge appears around the dock
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -162,11 +158,11 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
           gradient: LinearGradient(
             colors: [
               brightness == Brightness.light
-                  ? Colors.white.withOpacity(0.3)
-                  : Colors.black.withOpacity(0.3),
+                  ? Colors.white.withValues(alpha: 0.25)
+                  : Colors.black.withValues(alpha: 0.25),
               brightness == Brightness.light
-                  ? Colors.white.withOpacity(0.1)
-                  : Colors.black.withOpacity(0.1),
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.black.withValues(alpha: 0.05),
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -175,8 +171,8 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
           boxShadow: [
             BoxShadow(
               color: brightness == Brightness.light
-                  ? Colors.white.withOpacity(0.2)
-                  : Colors.black.withOpacity(0.2),
+                  ? Colors.white.withValues(alpha: 0.15)
+                  : Colors.black.withValues(alpha: 0.15),
               blurRadius: 10,
               spreadRadius: 2,
             ),
