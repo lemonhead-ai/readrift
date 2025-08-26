@@ -75,9 +75,8 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
-    final tintColor = brightness == Brightness.light
-        ? Colors.white.withOpacity(0.1) // Subtle tint for light mode
-        : Colors.black.withOpacity(0.05); // Subtle tint for dark mode
+    // Fully transparent tint to avoid any opaque backdrop; rely on blur and shadow only
+    final tintColor = Colors.transparent;
 
     return AnimatedBuilder(
       animation: _animationController,
@@ -99,7 +98,8 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
             child: Container(
               height: 70,
               decoration: BoxDecoration(
-                color: tintColor, // Light tint instead of solid color
+                // No fill color to keep the dock floating/transparent
+                color: tintColor,
                 borderRadius: BorderRadius.circular(60.0),
                 boxShadow: [
                   BoxShadow(
@@ -110,12 +110,7 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
                     offset: const Offset(0, 15),
                   ),
                 ],
-                border: Border.all(
-                  color: brightness == Brightness.light
-                      ? Colors.white.withOpacity(0.2)
-                      : Colors.black.withOpacity(0.2),
-                  width: 1.5,
-                ),
+                // Remove border so no gray/black edge appears around the dock
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
