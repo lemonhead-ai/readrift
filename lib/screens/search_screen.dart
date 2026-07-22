@@ -1,15 +1,14 @@
+// lib/screens/search_screen.dart
 import 'package:readrift/security/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:readrift/screens/dock.dart';
 import 'package:readrift/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -23,8 +22,7 @@ class SearchScreenState extends State<SearchScreen> {
   final FocusNode _searchFocusNode = FocusNode();
   bool _isSearching = false;
   bool _isSearchFocused = false;
-  int _selectedIndex = 1;
-  List<Map<String, dynamic>> searchResults = [];
+  List<dynamic> searchResults = [];
   final AuthService _authService = AuthService();
   bool _isLoading = false;
   List<String> _downloadedBookIds = [];
@@ -38,45 +36,42 @@ class SearchScreenState extends State<SearchScreen> {
         _isSearchFocused = _searchFocusNode.hasFocus;
       });
     });
-    _loadUserLibrary();
+    _syncDownloadedBooks();
   }
 
-  void _loadUserLibrary() {
+  Future<void> _syncDownloadedBooks() async {
     final user = _authService.currentUser;
-    if (user != null) {
-      _authService.getUserLibraryStream(user.uid).listen((snapshot) {
-        if (mounted) {
-          setState(() {
-            _downloadedBookIds = snapshot.docs
-                .where((doc) => doc.data()['downloaded'] == true)
-                .map((doc) => doc.id)
-                .toList();
-            _downloadedBookPaths = {
-              for (var doc in snapshot.docs.where((doc) => doc.data()['downloaded'] == true))
-                doc.id: doc.data()['filePath'] as String
-            };
-            // Refresh results if already searching to update button state
-            if (_isSearching) {
-              _updateLocalStatusInResults();
-            }
-          });
+    if (user == null) return;
+
+    final snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('library')
+        .get();
+
+    final List<String> downloadedIds = [];
+    final Map<String, String> paths = {};
+
+    for (var doc in snapshot.docs) {
+      final data = doc.data();
+      if (data['downloaded'] == true && data['filePath'] != null) {
+        final filePath = data['filePath'] as String;
+        if (await File(filePath).exists()) {
+          downloadedIds.add(data['bookId'].toString());
+          paths[data['bookId'].toString()] = filePath;
+        } else {
+          // File missing from storage, update state
+          await _authService.updateDownloadStatus(user.uid, data['bookId'].toString(), false);
         }
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _downloadedBookIds = downloadedIds;
+        _downloadedBookPaths = paths;
       });
     }
-  }
-
-  void _updateLocalStatusInResults() {
-    setState(() {
-      for (var i = 0; i < searchResults.length; i++) {
-        final bookId = searchResults[i]['bookId'].toString();
-        final isLocal = _downloadedBookIds.contains(bookId);
-        searchResults[i] = {
-          ...searchResults[i],
-          'isLocal': isLocal,
-          'filePath': isLocal ? _downloadedBookPaths[bookId] : null,
-        };
-      }
-    });
   }
 
   @override
@@ -87,14 +82,14 @@ class SearchScreenState extends State<SearchScreen> {
   }
 
   void _onSearchChanged(String value) {
-    setState(() {
-      _isSearching = value.isNotEmpty;
-      if (value.isEmpty) {
+    if (value.trim().isEmpty) {
+      setState(() {
+        _isSearching = false;
         searchResults = [];
-      } else {
-        _performSearch(value);
-      }
-    });
+      });
+    } else {
+      _performSearch(value);
+    }
   }
 
   void _clearSearch() {
@@ -109,6 +104,7 @@ class SearchScreenState extends State<SearchScreen> {
   Future<void> _performSearch(String query) async {
     setState(() {
       _isLoading = true;
+      _isSearching = true;
     });
 
     try {
@@ -218,6 +214,8 @@ class SearchScreenState extends State<SearchScreen> {
 
         await _authService.addBookToLibrary(user.uid, bookMetadata);
 
+        await _syncDownloadedBooks(); // Sync locally
+
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("${book["title"]} downloaded successfully!")),
@@ -237,13 +235,6 @@ class SearchScreenState extends State<SearchScreen> {
         });
       }
     }
-  }
-
-
-  void _onNavIconTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
   }
 
   @override
@@ -290,276 +281,229 @@ class SearchScreenState extends State<SearchScreen> {
             final photoUrl = authUser.photoURL;
 
             return Scaffold(
-              body: Stack(
-                children: [
-                  SafeArea(
-                    bottom: false,
-                    child: SingleChildScrollView(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+              body: SafeArea(
+                bottom: false,
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                IconButton(
-                                  icon: Icon(
-                                    Icons.arrow_back,
-                                    color: Theme.of(context).brightness ==
-                                            Brightness.light
-                                        ? AppColors.lightText
-                                        : AppColors.darkText,
+                            IconButton(
+                              onPressed: () {
+                                context.go('/');
+                              },
+                              icon: Icon(
+                                Icons.arrow_back,
+                                color: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.lightText
+                                    : AppColors.darkText,
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(
+                                    horizontal: 4.0),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 5, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? AppColors.lightDockBackground
+                                          .withAlpha((0.3 * 255).toInt())
+                                      : AppColors.darkDockBackground
+                                          .withAlpha((0.3 * 255).toInt()),
+                                  borderRadius: BorderRadius.circular(100),
+                                  border: Border.all(
+                                    color: Colors.white.withAlpha(0x19),
+                                    width: 1.0,
                                   ),
-                                  onPressed: () {
-                                    context.go('/');
-                                  },
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withAlpha(0x19),
+                                      blurRadius: 30,
+                                      offset: const Offset(0, 10),
+                                    ),
+                                  ],
                                 ),
-                                Expanded(
-                                  child: Container(
-                                    margin: const EdgeInsets.symmetric(
-                                        horizontal: 4.0),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 5, vertical: 1),
-                                    decoration: BoxDecoration(
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.search_rounded,
                                       color: Theme.of(context).brightness ==
                                               Brightness.light
-                                          ? AppColors.lightDockBackground
-                                              .withAlpha((0.3 * 255).toInt())
-                                          : AppColors.darkDockBackground
-                                              .withAlpha((0.3 * 255).toInt()),
-                                      borderRadius: BorderRadius.circular(100),
-                                      border: Border.all(
-                                        color: Colors.white.withAlpha(0x19),
-                                        width: 1.0,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withAlpha(0x19),
-                                          blurRadius: 30,
-                                          offset: const Offset(0, 10),
-                                        ),
-                                      ],
+                                          ? AppColors.lightSecondaryText
+                                          : AppColors.darkSecondaryText,
                                     ),
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.search_rounded,
-                                          color: Theme.of(context).brightness ==
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: TextField(
+                                        controller: _searchController,
+                                        focusNode: _searchFocusNode,
+                                        decoration: InputDecoration(
+                                          hintText: "Search for books...",
+                                          border: InputBorder.none,
+                                          hintStyle: TextStyle(
+                                            color: Theme.of(context)
+                                                        .brightness ==
+                                                    Brightness.light
+                                                ? AppColors.lightSecondaryText
+                                                : AppColors.darkSecondaryText,
+                                          ),
+                                        ),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                          .brightness ==
+                                                      Brightness.light
+                                                  ? AppColors.lightText
+                                                  : AppColors.darkText,
+                                            ),
+                                        onChanged: _onSearchChanged,
+                                      ),
+                                    ),
+                                    if (_isSearching)
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.clear,
+                                          color: Theme.of(context)
+                                                      .brightness ==
                                                   Brightness.light
                                               ? AppColors.lightSecondaryText
                                               : AppColors.darkSecondaryText,
                                         ),
-                                        const SizedBox(width: 4),
-                                        Expanded(
-                                          child: TextField(
-                                            controller: _searchController,
-                                            focusNode: _searchFocusNode,
-                                            decoration: InputDecoration(
-                                              hintText: "Search for books...",
-                                              border: InputBorder.none,
-                                              hintStyle: TextStyle(
-                                                color: Theme.of(context)
-                                                            .brightness ==
-                                                        Brightness.light
-                                                    ? AppColors
-                                                        .lightSecondaryText
-                                                    : AppColors
-                                                        .darkSecondaryText,
-                                              ),
-                                            ),
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodyMedium
-                                                ?.copyWith(
-                                                  color: Theme.of(context)
-                                                              .brightness ==
-                                                          Brightness.light
-                                                      ? AppColors.lightText
-                                                      : AppColors.darkText,
-                                                ),
-                                            onChanged: _onSearchChanged,
-                                          ),
-                                        ),
-                                        if (_isSearching)
-                                          IconButton(
-                                            icon: Icon(
-                                              Icons.clear,
-                                              color: Theme.of(context)
-                                                          .brightness ==
-                                                      Brightness.light
-                                                  ? AppColors.lightSecondaryText
-                                                  : AppColors.darkSecondaryText,
-                                            ),
-                                            onPressed: _clearSearch,
-                                          ),
-                                      ],
-                                    ),
-                                  ),
+                                        onPressed: _clearSearch,
+                                      ),
+                                  ],
                                 ),
-                                IconButton(
-                                  onPressed: () {
-                                    context.go('/profile');
-                                  },
-                                  icon: Container(
-                                    width: 40,
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.grey[300],
-                                    ),
-                                    child: photoUrl != null
-                                        ? ClipOval(
-                                            child: Image.network(
-                                              photoUrl,
-                                              fit: BoxFit.cover,
-                                              width: 40,
-                                              height: 40,
-                                              errorBuilder:
-                                                  (context, error, stackTrace) {
-                                                return const Icon(
-                                                  Icons.person,
-                                                  size: 24,
-                                                  color: Colors.grey,
-                                                );
-                                              },
-                                            ),
-                                          )
-                                        : const Icon(
-                                            Icons.person,
-                                            size: 24,
-                                            color: Colors.grey,
-                                          ),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
-                            const SizedBox(height: 10),
-                            if (_isLoading)
-                              const Padding(
-                                padding: EdgeInsets.all(32.0),
-                                child: Center(
-                                  child: CircularProgressIndicator(
-                                    color: AppColors.accentOrange,
-                                  ),
+                            IconButton(
+                              onPressed: () {
+                                context.go('/profile');
+                              },
+                              icon: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.grey[300],
                                 ),
-                              ),
-                            if (!_isLoading && _isSearching && searchResults.isEmpty)
-                              Container(
-                                alignment: Alignment.center,
-                                child: Text(
-                                  "No results found for '${_searchController.text}'",
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyLarge
-                                      ?.copyWith(
-                                        color: Theme.of(context).brightness ==
-                                                Brightness.light
-                                            ? AppColors.lightSecondaryText
-                                            : AppColors.darkSecondaryText,
+                                child: photoUrl != null
+                                    ? ClipOval(
+                                        child: Image.network(
+                                          photoUrl,
+                                          fit: BoxFit.cover,
+                                          width: 40,
+                                          height: 40,
+                                          errorBuilder: (context, error,
+                                              stackTrace) {
+                                            return const Icon(
+                                              Icons.person,
+                                              size: 24,
+                                              color: Colors.grey,
+                                            );
+                                          },
+                                        ),
+                                      )
+                                    : const Icon(
+                                        Icons.person,
+                                        size: 24,
+                                        color: Colors.grey,
                                       ),
-                                ),
                               ),
-                            if (!_isLoading && _isSearching && searchResults.isNotEmpty)
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ...searchResults.map((result) =>
-                                      _buildSearchResultItem(context, result)),
-                                ],
-                              ),
-
-                            if (!_isSearchFocused && !_isSearching) ...[
-                              Text(
-                                "Recent Searches",
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w400,
-                                      color: Theme.of(context).brightness ==
-                                              Brightness.light
-                                          ? AppColors.lightText
-                                          : AppColors.darkText,
-                                    ),
-                              ),
-                              const SizedBox(height: 2),
-                              SizedBox(
-                                height: 36,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    _buildSearchChip(context, "George Orwell"),
-                                    _buildSearchChip(context, "James Clear"),
-                                    _buildSearchChip(context, "J.K. Rowling"),
-                                    _buildSearchChip(context, "Nir Eyal"),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                "Recommendations",
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w400,
-                                      color: Theme.of(context).brightness ==
-                                              Brightness.light
-                                          ? AppColors.lightText
-                                          : AppColors.darkText,
-                                    ),
-                              ),
-                              const SizedBox(height: 12),
-                              SizedBox(
-                                height: 60,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    _buildRecommendationItem(
-                                        context, "1984", "George Orwell"),
-                                    _buildRecommendationItem(context,
-                                        "Atomic Habits", "James Clear"),
-                                    _buildRecommendationItem(context,
-                                        "Harry Potter", "J.K. Rowling"),
-                                    _buildRecommendationItem(
-                                        context, "Hooked", "Nir Eyal"),
-                                  ],
-                                ),
-                              ),
-                            ],
-                            if (!_isSearching && !_isSearchFocused)
-                              Container(
-                                height: 200,
-                                alignment: Alignment.center,
-                                child: Text(
-                                  "Search for books...",
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyLarge
-                                      ?.copyWith(
-                                        color: Theme.of(context).brightness ==
-                                                Brightness.light
-                                            ? AppColors.lightSecondaryText
-                                            : AppColors.darkSecondaryText,
-                                      ),
-                                ),
-                              ),
-                            const SizedBox(height: 120),
+                            ),
                           ],
                         ),
-                      ),
+                        const SizedBox(height: 10),
+                        if (_isLoading)
+                          const Padding(
+                            padding: EdgeInsets.all(32.0),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.accentOrange,
+                              ),
+                            ),
+                          ),
+                        if (!_isLoading && _isSearching && searchResults.isEmpty)
+                          Container(
+                            alignment: Alignment.center,
+                            child: Padding(
+                              padding: const EdgeInsets.all(32.0),
+                              child: Text(
+                                "No results found for '${_searchController.text}'",
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge
+                                    ?.copyWith(
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.light
+                                          ? AppColors.lightSecondaryText
+                                          : AppColors.darkSecondaryText,
+                                    ),
+                              ),
+                            ),
+                          ),
+                        if (!_isLoading && _isSearching && searchResults.isNotEmpty)
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ...searchResults.map((result) =>
+                                  _buildSearchResultItem(context, result)),
+                            ],
+                          ),
+                        if (!_isSearchFocused && !_isSearching) ...[
+                          Text(
+                            "Recent Searches",
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w400,
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? AppColors.lightText
+                                      : AppColors.darkText,
+                                ),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            height: 36,
+                            child: ListView(
+                              scrollDirection: Axis.horizontal,
+                              children: [
+                                _buildSearchChip(context, "George Orwell"),
+                                _buildSearchChip(context, "James Clear"),
+                                _buildSearchChip(context, "J.K. Rowling"),
+                                _buildSearchChip(context, "Nir Eyal"),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            "Search for books...",
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyLarge
+                                ?.copyWith(
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? AppColors.lightSecondaryText
+                                      : AppColors.darkSecondaryText,
+                                ),
+                          ),
+                        ],
+                        const SizedBox(height: 120),
+                      ],
                     ),
                   ),
-                  if (!_isSearchFocused)
-                    Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Dock(
-                        selectedIndex: _selectedIndex,
-                        onItemTapped: _onNavIconTapped,
-                      ),
-                    ),
-                ],
+                ),
               ),
             );
           },
@@ -569,79 +513,42 @@ class SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildSearchChip(BuildContext context, String label) {
-    return Container(
-      margin: const EdgeInsets.only(right: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.light
-            ? AppColors.lightDockBackground.withAlpha((0.1 * 255).toInt())
-            : AppColors.darkDockBackground.withAlpha((0.1 * 255).toInt()),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
+    return GestureDetector(
+      onTap: () {
+        _searchController.text = label;
+        _performSearch(label);
+      },
+      child: Container(
+        margin: const EdgeInsets.only(right: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
           color: Theme.of(context).brightness == Brightness.light
-              ? AppColors.lightSecondaryText.withAlpha(0x4D)
-              : AppColors.darkSecondaryText.withAlpha(0x4D),
+              ? AppColors.lightDockBackground.withAlpha((0.1 * 255).toInt())
+              : AppColors.darkDockBackground.withAlpha((0.1 * 255).toInt()),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Theme.of(context).brightness == Brightness.light
+                ? AppColors.lightSecondaryText.withAlpha(0x4D)
+                : AppColors.darkSecondaryText.withAlpha(0x4D),
+          ),
         ),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).brightness == Brightness.light
-                  ? AppColors.lightText
-                  : AppColors.darkText,
-            ),
-      ),
-    );
-  }
-
-  Widget _buildRecommendationItem(
-      BuildContext context, String title, String author) {
-    return Container(
-      margin: const EdgeInsets.only(right: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.light
-            ? AppColors.lightDockBackground.withAlpha((0.1 * 255).toInt())
-            : AppColors.darkDockBackground.withAlpha((0.1 * 255).toInt()),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).brightness == Brightness.light
-                      ? AppColors.lightText
-                      : AppColors.darkText,
-                ),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            "by $author",
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).brightness == Brightness.light
-                      ? AppColors.lightSecondaryText
-                      : AppColors.darkSecondaryText,
-                  fontSize: 12,
-                ),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-          ),
-        ],
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).brightness == Brightness.light
+                    ? AppColors.lightText
+                    : AppColors.darkText,
+              ),
+        ),
       ),
     );
   }
 
   Widget _buildSearchResultItem(
       BuildContext context, Map<String, dynamic> result) {
-    final isLocal = result["isLocal"] as bool;
-    final isFree = result["isFree"] as bool;
-    final downloadUrl = result["downloadUrl"] as String?;
+    final isLocal = result['isLocal'] as bool? ?? false;
+    final isFree = result['isFree'] as bool? ?? true;
+    final downloadUrl = result['downloadUrl'] as String?;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -652,7 +559,7 @@ class SearchScreenState extends State<SearchScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  result["title"],
+                  result['title'] ?? 'Unknown',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).brightness == Brightness.light
@@ -662,7 +569,7 @@ class SearchScreenState extends State<SearchScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "by ${result["author"]}",
+                  "by ${result['author'] ?? 'Unknown'}",
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).brightness == Brightness.light
                             ? AppColors.lightSecondaryText
@@ -679,7 +586,7 @@ class SearchScreenState extends State<SearchScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      "Available",
+                      "Available Offline",
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: Colors.white,
                             fontSize: 12,
@@ -732,7 +639,7 @@ class SearchScreenState extends State<SearchScreen> {
                     ),
               ),
             ),
-          if (!isLocal && !isFree)
+          if (!isFree)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
@@ -747,7 +654,6 @@ class SearchScreenState extends State<SearchScreen> {
                     ),
               ),
             ),
-
         ],
       ),
     );

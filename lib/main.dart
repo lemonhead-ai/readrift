@@ -1,3 +1,4 @@
+// lib/main.dart
 import 'package:readrift/models/blurred_status_bar.dart';
 import 'package:readrift/security/auth_service.dart';
 import 'package:readrift/security/reset_password_screen.dart';
@@ -18,29 +19,46 @@ import 'package:readrift/screens/account_settings_screen.dart';
 import 'package:readrift/screens/reader_screen.dart';
 import 'package:readrift/theme.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
+import 'package:readrift/services/book_service.dart';
+import 'package:readrift/screens/dock.dart';
+import 'package:readrift/models/book.dart';
 import 'package:readrift/theme/page_transitions.dart';
+
+class BookProvider with ChangeNotifier {
+  List<Book> recommendations = [];
+  List<Book> library = [];
+
+  Future<void> fetchRecommendations() async {
+    recommendations = await BookService().getRecommendations();
+    notifyListeners();
+  }
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(); // Initialize Firebase
+  await Firebase.initializeApp();
 
-  // Set status bar icon brightness
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarBrightness: Brightness.dark, // For iOS
-      statusBarIconBrightness:
-          Brightness.dark, // For Android (dark icons in light mode)
+      statusBarBrightness: Brightness.dark,
+      statusBarIconBrightness: Brightness.dark,
     ),
   );
 
-  runApp(const MyApp());
+  runApp(MultiProvider(
+    providers: [
+      ChangeNotifierProvider(create: (_) => BookProvider()),
+    ],
+    child: const MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  static final router = GoRouter(
+  static final GoRouter _router = GoRouter(
     initialLocation: '/welcome',
     routes: [
       GoRoute(
@@ -49,38 +67,6 @@ class MyApp extends StatelessWidget {
           context: context,
           state: state,
           child: const WelcomeScreen(),
-        ),
-      ),
-      GoRoute(
-        path: '/',
-        pageBuilder: (context, state) => buildAdaptivePageRoute(
-          context: context,
-          state: state,
-          child: const HomeScreen(),
-        ),
-      ),
-      GoRoute(
-        path: '/profile',
-        pageBuilder: (context, state) => buildAdaptivePageRoute(
-          context: context,
-          state: state,
-          child: const ProfileScreen(),
-        ),
-      ),
-      GoRoute(
-        path: '/search',
-        pageBuilder: (context, state) => buildAdaptivePageRoute(
-          context: context,
-          state: state,
-          child: const SearchScreen(),
-        ),
-      ),
-      GoRoute(
-        path: '/library',
-        pageBuilder: (context, state) => buildAdaptivePageRoute(
-          context: context,
-          state: state,
-          child: const LibraryScreen(),
         ),
       ),
       GoRoute(
@@ -106,6 +92,43 @@ class MyApp extends StatelessWidget {
           state: state,
           child: const ResetPasswordScreen(),
         ),
+      ),
+      ShellRoute(
+        builder: (context, state, child) => ScaffoldWithDock(child: child),
+        routes: [
+          GoRoute(
+            path: '/',
+            pageBuilder: (context, state) => buildAdaptivePageRoute(
+              context: context,
+              state: state,
+              child: const HomeScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/search',
+            pageBuilder: (context, state) => buildAdaptivePageRoute(
+              context: context,
+              state: state,
+              child: const SearchScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/library',
+            pageBuilder: (context, state) => buildAdaptivePageRoute(
+              context: context,
+              state: state,
+              child: const LibraryScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/profile',
+            pageBuilder: (context, state) => buildAdaptivePageRoute(
+              context: context,
+              state: state,
+              child: const ProfileScreen(),
+            ),
+          ),
+        ],
       ),
       GoRoute(
         path: '/notifications',
@@ -161,7 +184,6 @@ class MyApp extends StatelessWidget {
       final user = authService.currentUser;
       final bool isLoggedIn = user != null;
 
-      // Redirect to HomeScreen if user is logged in and trying to access auth screens
       if (isLoggedIn &&
           (state.matchedLocation == '/welcome' ||
               state.matchedLocation == '/login' ||
@@ -170,7 +192,6 @@ class MyApp extends StatelessWidget {
         return '/';
       }
 
-      // Redirect to WelcomeScreen if user is not logged in and trying to access protected screens
       if (!isLoggedIn &&
           (state.matchedLocation == '/' ||
               state.matchedLocation == '/profile' ||
@@ -184,13 +205,12 @@ class MyApp extends StatelessWidget {
         return '/welcome';
       }
 
-      return null; // No redirect needed
+      return null;
     },
   );
 
   @override
   Widget build(BuildContext context) {
-    // Update status bar icon brightness based on theme
     final isLightMode =
         MediaQuery.of(context).platformBrightness == Brightness.light;
     SystemChrome.setSystemUIOverlayStyle(
@@ -206,13 +226,53 @@ class MyApp extends StatelessWidget {
       textDirection: TextDirection.ltr,
       child: BlurredStatusBar(
         child: MaterialApp.router(
-          title: 'ReadRift',
           theme: lightTheme(),
           darkTheme: darkTheme(),
           themeMode: ThemeMode.system,
-          routerConfig: router,
+          routerConfig: _router,
           debugShowCheckedModeBanner: false,
         ),
+      ),
+    );
+  }
+}
+
+class ScaffoldWithDock extends StatefulWidget {
+  final Widget child;
+  const ScaffoldWithDock({super.key, required this.child});
+
+  @override
+  State<ScaffoldWithDock> createState() => _ScaffoldWithDockState();
+}
+
+class _ScaffoldWithDockState extends State<ScaffoldWithDock> {
+  int _selectedIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBody: true,
+      backgroundColor: Colors.transparent,
+      body: widget.child,
+      bottomNavigationBar: Dock(
+        selectedIndex: _selectedIndex,
+        onItemTapped: (index) {
+          setState(() => _selectedIndex = index);
+          switch (index) {
+            case 0:
+              context.go('/');
+              break;
+            case 1:
+              context.go('/search');
+              break;
+            case 2:
+              context.go('/library');
+              break;
+            case 3:
+              context.go('/profile');
+              break;
+          }
+        },
       ),
     );
   }

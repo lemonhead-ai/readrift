@@ -1,14 +1,13 @@
+// lib/screens/library_screen.dart
 import 'package:readrift/security/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:readrift/screens/dock.dart';
 import 'package:readrift/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
-
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
@@ -18,14 +17,7 @@ class LibraryScreen extends StatefulWidget {
 }
 
 class LibraryScreenState extends State<LibraryScreen> {
-  int _selectedIndex = 2;
   final AuthService _authService = AuthService();
-
-  void _onNavIconTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
 
   Future<void> _importLocalBook() async {
     final user = _authService.currentUser;
@@ -140,172 +132,135 @@ class LibraryScreenState extends State<LibraryScreen> {
                     [];
 
                 return Scaffold(
-                  body: Stack(
-                    children: [
-                      SafeArea(
-                        bottom: false,
-                        child: SingleChildScrollView(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                  body: SafeArea(
+                    bottom: false,
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.arrow_back,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.light
+                                        ? AppColors.lightText
+                                        : AppColors.darkText,
+                                  ),
+                                  onPressed: () {
+                                    context.go('/');
+                                  },
+                                ),
                                 Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     IconButton(
                                       icon: Icon(
-                                        Icons.arrow_back,
+                                        Icons.bookmark_border,
                                         color: Theme.of(context).brightness ==
                                                 Brightness.light
                                             ? AppColors.lightText
                                             : AppColors.darkText,
                                       ),
                                       onPressed: () {
-                                        context.go('/');
+                                        context.go('/bookmarks');
                                       },
                                     ),
-                                    Row(
-                                      children: [
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.bookmark_border,
-                                            color: Theme.of(context)
-                                                        .brightness ==
-                                                    Brightness.light
-                                                ? AppColors.lightText
-                                                : AppColors.darkText,
-                                          ),
-                                          onPressed: () {
-                                            context.go('/bookmarks');
-                                          },
+                                    IconButton(
+                                      onPressed: () {
+                                        context.go('/profile');
+                                      },
+                                      icon: Container(
+                                        width: 40,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.grey[300],
                                         ),
-                                        IconButton(
-                                          onPressed: () {
-                                            context.go('/profile');
-                                          },
-                                          icon: Container(
-                                            width: 40,
-                                            height: 40,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: Colors.grey[300],
-                                            ),
-                                            child: photoUrl != null
-                                                ? ClipOval(
-                                                    child: Image.network(
-                                                      photoUrl,
-                                                      fit: BoxFit.cover,
-                                                      width: 40,
-                                                      height: 40,
-                                                      errorBuilder: (context,
-                                                          error, stackTrace) {
-                                                        return const Icon(
-                                                          Icons.person,
-                                                          size: 24,
-                                                          color: Colors.grey,
-                                                        );
-                                                      },
-                                                    ),
-                                                  )
-                                                : const Icon(
-                                                    Icons.person,
-                                                    size: 24,
-                                                    color: Colors.grey,
-                                                  ),
-                                          ),
-                                        ),
-                                      ],
+                                        child: photoUrl != null
+                                            ? ClipOval(
+                                                child: Image.network(
+                                                  photoUrl,
+                                                  fit: BoxFit.cover,
+                                                  width: 40,
+                                                  height: 40,
+                                                ),
+                                              )
+                                            : Icon(
+                                                Icons.person_rounded,
+                                                color: Colors.grey[600],
+                                              ),
+                                      ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          "My Library",
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .headlineMedium
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                                color: Theme.of(context)
-                                                            .brightness ==
-                                                        Brightness.light
-                                                    ? AppColors.lightText
-                                                    : AppColors.darkText,
-                                              ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        IconButton(
-                                          icon: const Icon(
-                                              Icons.add_to_photos_rounded,
-                                              color: AppColors.accentOrange),
-                                          tooltip: "Import EPUB/PDF",
-                                          onPressed: _importLocalBook,
-                                        ),
-                                      ],
-                                    ),
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          Icons.book,
-                                          size: 16,
-                                          color: Theme.of(context).brightness ==
-                                                  Brightness.light
-                                              ? AppColors.lightSecondaryText
-                                              : AppColors.darkSecondaryText,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          "${libraryBooks.length} books",
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium
-                                              ?.copyWith(
-                                                color: Theme.of(context)
-                                                            .brightness ==
-                                                        Brightness.light
-                                                    ? AppColors
-                                                        .lightSecondaryText
-                                                    : AppColors
-                                                        .darkSecondaryText,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Library",
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .displaySmall
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.light
+                                            ? AppColors.lightText
+                                            : AppColors.darkText,
+                                      ),
                                 ),
-                                const SizedBox(height: 24),
-                                if (libraryBooks.isEmpty)
-                                  Container(
-                                    height: 300,
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      "Your library is empty.\nGo to Search or click '+' to import books.",
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyLarge
-                                          ?.copyWith(color: Colors.grey),
-                                      textAlign: TextAlign.center,
+                                IconButton(
+                                  icon: const Icon(Icons.add_rounded, size: 28),
+                                  onPressed: _importLocalBook,
+                                  color: AppColors.accentOrange,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "You have 📚 ${libraryBooks.length} books in your library",
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w400,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.light
+                                        ? AppColors.lightSecondaryText
+                                        : AppColors.darkSecondaryText,
+                                  ),
+                            ),
+                            const SizedBox(height: 24),
+                            libraryBooks.isEmpty
+                                ? Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(48.0),
+                                      child: Text(
+                                        "Your library is empty. Import files or search online!",
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(color: Colors.grey),
+                                        textAlign: TextAlign.center,
+                                      ),
                                     ),
                                   )
-                                else
-                                  GridView.builder(
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
+                                : GridView.builder(
                                     shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
                                     gridDelegate:
                                         SliverGridDelegateWithFixedCrossAxisCount(
                                       crossAxisCount: crossAxisCount,
-                                      crossAxisSpacing: 8.0,
-                                      mainAxisSpacing: 8.0,
-                                      childAspectRatio: 0.6,
+                                      childAspectRatio: 0.65,
+                                      crossAxisSpacing: 16,
+                                      mainAxisSpacing: 24,
                                     ),
                                     itemCount: libraryBooks.length,
                                     itemBuilder: (context, index) {
@@ -313,20 +268,11 @@ class LibraryScreenState extends State<LibraryScreen> {
                                       return _buildBookCard(context, book);
                                     },
                                   ),
-                                const SizedBox(height: 120),
-                              ],
-                            ),
-                          ),
+                            const SizedBox(height: 120),
+                          ],
                         ),
                       ),
-                      Align(
-                        alignment: Alignment.bottomCenter,
-                        child: Dock(
-                          selectedIndex: _selectedIndex,
-                          onItemTapped: _onNavIconTapped,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 );
               },
@@ -362,7 +308,7 @@ class LibraryScreenState extends State<LibraryScreen> {
 
     return GestureDetector(
       onTap: () {
-        if (downloaded) {
+        if (downloaded && book['filePath'] != null) {
           context.push('/reader', extra: {
             'bookId': book['bookId'].toString(),
             'filePath': book['filePath'] as String,

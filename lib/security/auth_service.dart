@@ -1,25 +1,23 @@
+// lib/security/auth_service.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
+import '../models/book.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  // Get the current user
   User? get currentUser => _auth.currentUser;
 
-  // Stream to listen to authentication state changes
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
-  // Stream to listen to user data changes from Firestore
   Stream<DocumentSnapshot<Map<String, dynamic>>> getUserDataStream(String uid) {
     return _firestore.collection('users').doc(uid).snapshots();
   }
 
-  // Sign up with email and password
   Future<String?> signUp({
     required String email,
     required String password,
@@ -27,30 +25,27 @@ class AuthService {
   }) async {
     try {
       UserCredential userCredential =
-          await _auth.createUserWithEmailAndPassword(
+      await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
       User? user = userCredential.user;
       if (user != null) {
-        // Update the user's display name
         await user.updateDisplayName(username);
-        // Store user data in Firestore
         await _firestore.collection('users').doc(user.uid).set({
           'username': username,
           'email': email,
           'createdAt': FieldValue.serverTimestamp(),
         });
       }
-      return null; // Success, no error
+      return null;
     } on FirebaseAuthException catch (e) {
-      return e.message; // Return error message
+      return e.message;
     } catch (e) {
       return "An unexpected error occurred.";
     }
   }
 
-  // Sign in with email and password
   Future<String?> signIn({
     required String email,
     required String password,
@@ -60,61 +55,55 @@ class AuthService {
         email: email,
         password: password,
       );
-      return null; // Success, no error
+      return null;
     } on FirebaseAuthException catch (e) {
-      return e.message; // Return error message
+      return e.message;
     } catch (e) {
       return "An unexpected error occurred.";
     }
   }
 
-  // Send password reset email
   Future<String?> sendPasswordResetEmail(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
-      return null; // Success, no error
+      return null;
     } on FirebaseAuthException catch (e) {
-      return e.message; // Return error message
+      return e.message;
     } catch (e) {
       return "An unexpected error occurred.";
     }
   }
 
-  // Upload profile photo to Firebase Storage and update user profile
   Future<String?> updateProfilePhoto(File photoFile) async {
     try {
       User? user = _auth.currentUser;
       if (user == null) {
         return "No user is currently signed in.";
       }
-      // Upload the photo to Firebase Storage
       String filePath =
           'profile_photos/${user.uid}/${DateTime.now().millisecondsSinceEpoch}.jpg';
       UploadTask uploadTask = _storage.ref(filePath).putFile(photoFile);
       TaskSnapshot snapshot = await uploadTask;
       String photoUrl = await snapshot.ref.getDownloadURL();
 
-      // Update the user's photoURL in Firebase Authentication
       await user.updatePhotoURL(photoUrl);
       await user.reload();
 
-      // Update the photoURL in Firestore
       await _firestore.collection('users').doc(user.uid).update({
         'photoUrl': photoUrl,
       });
 
-      return null; // Success, no error
+      return null;
     } catch (e) {
       return "Failed to update profile photo: $e";
     }
   }
 
-  // Sign out
   Future<void> signOut() async {
     await _auth.signOut();
   }
 
-  // Stream user's library from Firestore
+  // Stream user's library from Firestore (Local implementation)
   Stream<QuerySnapshot<Map<String, dynamic>>> getUserLibraryStream(String uid) {
     return _firestore
         .collection('users')
@@ -123,7 +112,7 @@ class AuthService {
         .snapshots();
   }
 
-  // Add or update a book in user's Firestore library
+  // Add or update a book in user's Firestore library (Local implementation)
   Future<void> addBookToLibrary(
       String uid, Map<String, dynamic> bookMetadata) async {
     final bookId = bookMetadata['bookId'] as String;
@@ -135,7 +124,7 @@ class AuthService {
         .set(bookMetadata, SetOptions(merge: true));
   }
 
-  // Update reading progress
+  // Update reading progress (Local implementation)
   Future<void> updateReadingProgress(
     String uid,
     String bookId,
@@ -155,7 +144,7 @@ class AuthService {
     });
   }
 
-  // Update book download status in Firestore
+  // Update book download status in Firestore (Local implementation)
   Future<void> updateDownloadStatus(
       String uid, String bookId, bool downloaded,
       {String? filePath}) async {
@@ -168,6 +157,33 @@ class AuthService {
       'downloaded': downloaded,
       if (filePath != null) 'filePath': filePath,
     });
+  }
+
+  // --- Remote Branch (origin/master) Implementations ---
+  Future<void> addBookToLibraryRemote(String uid, Book book) async {
+    await _firestore.collection('users').doc(uid).collection('books').doc(book.id).set(book.toFirestore());
+  }
+
+  Stream<List<Book>> getUserLibraryStreamRemote(String uid) {
+    return _firestore.collection('users').doc(uid).collection('books').snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) => Book.fromFirestore(doc)).toList();
+    });
+  }
+
+  Future<void> updateBookProgressRemote(String uid, String bookId, double progress, bool isCompleted) async {
+    await _firestore.collection('users').doc(uid).collection('books').doc(bookId).update({
+      'progress': progress,
+      'isCompleted': isCompleted,
+    });
+  }
+
+  Future<Book?> getCurrentReading(String uid) async {
+    final snapshot = await _firestore.collection('users').doc(uid).collection('books')
+        .where('isCompleted', isEqualTo: false).limit(1).get();
+    if (snapshot.docs.isNotEmpty) {
+      return Book.fromFirestore(snapshot.docs.first);
+    }
+    return null;
   }
 }
 

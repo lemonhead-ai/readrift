@@ -1,7 +1,7 @@
 import 'package:readrift/security/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:readrift/screens/dock.dart';
+
 import 'package:readrift/theme.dart';
 
 class SubscriptionScreen extends StatefulWidget {
@@ -12,7 +12,6 @@ class SubscriptionScreen extends StatefulWidget {
 }
 
 class SubscriptionScreenState extends State<SubscriptionScreen> {
-  int _selectedIndex = 3;
   final AuthService _authService = AuthService();
   String _selectedPlan = 'monthly';
 
@@ -44,11 +43,7 @@ class SubscriptionScreenState extends State<SubscriptionScreen> {
     },
   ];
 
-  void _onNavIconTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
+  // Dock is handled globally via ShellRoute; no local navigation index needed here.
 
   void _selectPlan(String plan) {
     setState(() {
@@ -67,6 +62,7 @@ class SubscriptionScreenState extends State<SubscriptionScreen> {
     }
 
     return Scaffold(
+      extendBody: true,
       body: Stack(
         children: [
           SafeArea(
@@ -200,13 +196,7 @@ class SubscriptionScreenState extends State<SubscriptionScreen> {
               ),
             ),
           ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Dock(
-              selectedIndex: _selectedIndex,
-              onItemTapped: _onNavIconTapped,
-            ),
-          ),
+          // Dock is provided globally by ScaffoldWithDock in ShellRoute
         ],
       ),
     );

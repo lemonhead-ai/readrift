@@ -17,12 +17,15 @@ dependencies:
   go_router: ^15.1.1
   cloud_firestore: ^5.6.6
   firebase_storage: ^12.4.5
+  http: ^1.2.2
+  cached_network_image: ^3.4.1
+  provider: ^6.1.2
+  syncfusion_flutter_pdfviewer: ^30.2.6
   intl: ^0.19.0
   epub_view: ^3.0.0
   flutter_pdfview: ^1.3.2
   file_picker: ^8.1.2
   path_provider: ^2.1.3
-  http: ^1.2.1
   flutter_animate: ^4.5.0
 
 dev_dependencies:
@@ -33,15 +36,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/1984.png
-    - assets/atomic_habits.png
-    - assets/harry_potter.png
-    - assets/hooked.png
-    - assets/rich_dad.png
-    - assets/subtle_art.png
-    - assets/the_alchemist.png
     - assets/welcome_illustration.png
-
   fonts:
     - family: SFProRounded
       fonts:
