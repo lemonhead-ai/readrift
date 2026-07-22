@@ -9,6 +9,8 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:readrift/widgets/bouncy_tap.dart';
+import 'package:readrift/models/book.dart';
+import 'package:readrift/widgets/custom_toast.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -59,13 +61,9 @@ class ProfileScreenState extends State<ProfileScreen> {
       String? error = await _authService.updateProfilePhoto(photoFile);
       if (!mounted) return;
       if (error == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Profile photo updated successfully!")),
-        );
+        ToastService.showSuccess(context, "Your profile photo has been updated!");
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error)),
-        );
+        ToastService.showError(context, error);
       }
     }
   }
@@ -86,6 +84,9 @@ class ProfileScreenState extends State<ProfileScreen> {
             onPressed: () async {
               Navigator.pop(context);
               await _authService.signOut();
+              if (mounted) {
+                ToastService.showInfo(context, "You've been signed out");
+              }
             },
             child: const Text("Sign Out"),
           ),
@@ -505,3 +506,7 @@ class ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
+
+
+
+

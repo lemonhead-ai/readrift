@@ -2,6 +2,7 @@ import 'package:readrift/security/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:readrift/theme.dart';
+import 'package:readrift/widgets/custom_toast.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -31,9 +32,7 @@ class ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
     // Basic input validation
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter your email")),
-      );
+      ToastService.showWarning(context, "Please enter your email address");
       setState(() {
         _isLoading = false;
       });
@@ -52,13 +51,9 @@ class ResetPasswordScreenState extends State<ResetPasswordScreen> {
     });
 
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
-      );
+      ToastService.showError(context, error);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Password reset link sent to $email")),
-      );
+      ToastService.showSuccess(context, "Check your email for the password reset link");
     }
   }
 

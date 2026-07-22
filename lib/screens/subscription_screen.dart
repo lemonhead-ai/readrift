@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:readrift/theme.dart';
+import 'package:readrift/widgets/custom_toast.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({super.key});
@@ -163,12 +164,7 @@ class SubscriptionScreenState extends State<SubscriptionScreen> {
                           child: ElevatedButton(
                             onPressed: () {
                               // Handle subscription purchase
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      'Subscription purchase coming soon!'),
-                                ),
-                              );
+                              ToastService.showInfo(context, 'Subscription features are coming soon!');
                             },
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 16),

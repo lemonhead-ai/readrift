@@ -2,6 +2,7 @@ import 'package:readrift/security/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:readrift/theme.dart';
+import 'package:readrift/widgets/custom_toast.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -36,9 +37,7 @@ class SignUpScreenState extends State<SignUpScreen> {
 
     // Basic input validation
     if (username.isEmpty || email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill in all fields")),
-      );
+      ToastService.showWarning(context, "Please complete all the required fields");
       setState(() {
         _isLoading = false;
       });
@@ -46,10 +45,7 @@ class SignUpScreenState extends State<SignUpScreen> {
     }
 
     if (password.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text("Password must be at least 6 characters long")),
-      );
+      ToastService.showWarning(context, "Password should be at least 6 characters");
       setState(() {
         _isLoading = false;
       });
@@ -67,10 +63,9 @@ class SignUpScreenState extends State<SignUpScreen> {
     });
     if (!mounted) return;
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
-      );
+      ToastService.showError(context, error);
     } else {
+      ToastService.showSuccess(context, "Great! Your account has been created");
       // Navigation handled by GoRouter redirect
       context.go('/');
     }

@@ -2,6 +2,7 @@ import 'package:readrift/security/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:readrift/theme.dart';
+import 'package:readrift/widgets/custom_toast.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -33,9 +34,7 @@ class LoginScreenState extends State<LoginScreen> {
 
     // Basic input validation
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill in all fields")),
-      );
+      ToastService.showWarning(context, "Please enter your email and password");
       setState(() {
         _isLoading = false;
       });
@@ -51,10 +50,9 @@ class LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
-      );
+      ToastService.showError(context, error);
     } else {
+      ToastService.showSuccess(context, "Welcome back! You're now signed in");
       // Navigation handled by GoRouter redirect
       context.go('/');
     }

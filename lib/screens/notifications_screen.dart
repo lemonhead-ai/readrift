@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:readrift/theme.dart';
+import 'package:readrift/widgets/custom_toast.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -59,6 +60,7 @@ class NotificationsScreenState extends State<NotificationsScreen> {
           _notifications.firstWhere((n) => n['id'] == notificationId);
       notification['isRead'] = true;
     });
+    ToastService.showSuccess(context, 'Notification marked as read');
   }
 
   void _markAllAsRead() {
@@ -67,6 +69,7 @@ class NotificationsScreenState extends State<NotificationsScreen> {
         notification['isRead'] = true;
       }
     });
+    ToastService.showSuccess(context, 'All notifications have been marked as read');
   }
 
   @override

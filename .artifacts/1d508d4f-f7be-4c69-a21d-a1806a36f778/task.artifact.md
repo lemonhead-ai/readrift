@@ -1,0 +1,3 @@
+- [x] Upgrade app Java compatibility to 17 in `android/app/build.gradle.kts`
+- [x] Enforce Java 17 for all subprojects (Fix evaluation timing issue)
+- [ ] Verify build warnings are resolved (User action required)
