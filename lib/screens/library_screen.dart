@@ -1,4 +1,3 @@
-// lib/screens/library_screen.dart
 import 'package:readrift/security/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +7,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:readrift/widgets/bouncy_tap.dart';
+
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
@@ -135,6 +136,7 @@ class LibraryScreenState extends State<LibraryScreen> {
                   body: SafeArea(
                     bottom: false,
                     child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
@@ -306,7 +308,7 @@ class LibraryScreenState extends State<LibraryScreen> {
       );
     }
 
-    return GestureDetector(
+    return BouncyTap(
       onTap: () {
         if (downloaded && book['filePath'] != null) {
           context.push('/reader', extra: {

@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:readrift/widgets/bouncy_tap.dart';
 
 class Dock extends StatefulWidget {
   final int selectedIndex;
@@ -96,7 +96,6 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
             child: Container(
               height: 70,
               decoration: BoxDecoration(
-                // No color or tint to ensure full transparency
                 borderRadius: BorderRadius.circular(60.0),
                 boxShadow: [
                   BoxShadow(
@@ -114,8 +113,7 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
                   _buildNavIcon(context, Icons.home_max_rounded, 0),
                   _buildNavIcon(context, Icons.search_rounded, 1),
                   _buildNavIcon(context, Icons.menu_book_rounded, 2),
-                  _buildNavIcon(context, Icons.bookmark_border_rounded, 3),
-                  _buildNavIcon(context, Icons.account_circle_outlined, 4),
+                  _buildNavIcon(context, Icons.account_circle_outlined, 3),
                 ],
               ),
             ),
@@ -129,55 +127,38 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
     final bool isSelected = widget.selectedIndex == index;
     final brightness = Theme.of(context).brightness;
 
-    return GestureDetector(
+    return BouncyTap(
       onTap: () {
         widget.onItemTapped(index);
-        switch (index) {
-          case 0:
-            context.go('/');
-            break;
-          case 1:
-            context.go('/search');
-            break;
-          case 2:
-            context.go('/library');
-            break;
-          case 3:
-            context.go('/bookmark');
-            break;
-          case 4:
-            context.go('/profile');
-            break;
-        }
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(12),
         decoration: isSelected
             ? BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              brightness == Brightness.light
-                  ? Colors.white.withValues(alpha: 0.25)
-                  : Colors.black.withValues(alpha: 0.25),
-              brightness == Brightness.light
-                  ? Colors.white.withValues(alpha: 0.05)
-                  : Colors.black.withValues(alpha: 0.05),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: brightness == Brightness.light
-                  ? Colors.white.withValues(alpha: 0.15)
-                  : Colors.black.withValues(alpha: 0.15),
-              blurRadius: 10,
-              spreadRadius: 2,
-            ),
-          ],
-        )
+                gradient: LinearGradient(
+                  colors: [
+                    brightness == Brightness.light
+                        ? Colors.white.withValues(alpha: 0.25)
+                        : Colors.black.withValues(alpha: 0.25),
+                    brightness == Brightness.light
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : Colors.black.withValues(alpha: 0.05),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: brightness == Brightness.light
+                        ? Colors.white.withValues(alpha: 0.15)
+                        : Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
+                ],
+              )
             : null,
         child: Icon(
           icon,

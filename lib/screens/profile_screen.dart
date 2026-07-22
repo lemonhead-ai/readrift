@@ -2,12 +2,13 @@
 import 'package:readrift/security/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:readrift/models/book.dart';
+import 'package:readrift/widgets/bouncy_tap.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -21,7 +22,38 @@ class ProfileScreenState extends State<ProfileScreen> {
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickProfilePhoto() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    showCupertinoModalPopup(
+      context: context,
+      builder: (BuildContext context) => CupertinoActionSheet(
+        title: const Text('Update Profile Photo'),
+        message: const Text('Choose a source to select your photo'),
+        actions: <CupertinoActionSheetAction>[
+          CupertinoActionSheetAction(
+            child: const Text('Photo Library'),
+            onPressed: () {
+              Navigator.pop(context);
+              _getImage(ImageSource.gallery);
+            },
+          ),
+          CupertinoActionSheetAction(
+            child: const Text('Camera'),
+            onPressed: () {
+              Navigator.pop(context);
+              _getImage(ImageSource.camera);
+            },
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          isDefaultAction: true,
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _getImage(ImageSource source) async {
+    final XFile? image = await _picker.pickImage(source: source);
     if (image != null) {
       File photoFile = File(image.path);
       String? error = await _authService.updateProfilePhoto(photoFile);
@@ -39,7 +71,27 @@ class ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _signOut() async {
-    await _authService.signOut();
+    showAdaptiveDialog(
+      context: context,
+      builder: (BuildContext context) => CupertinoAlertDialog(
+        title: const Text("Sign Out"),
+        content: const Text("Are you sure you want to sign out of ReadRift?"),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text("Cancel"),
+            onPressed: () => Navigator.pop(context),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () async {
+              Navigator.pop(context);
+              await _authService.signOut();
+            },
+            child: const Text("Sign Out"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -57,7 +109,7 @@ class ProfileScreenState extends State<ProfileScreen> {
       builder: (context, authSnapshot) {
         if (authSnapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+            body: Center(child: CircularProgressIndicator.adaptive()),
           );
         }
 
@@ -73,7 +125,7 @@ class ProfileScreenState extends State<ProfileScreen> {
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
+                body: Center(child: CircularProgressIndicator.adaptive()),
               );
             }
 
@@ -87,17 +139,20 @@ class ProfileScreenState extends State<ProfileScreen> {
             final username = userData['username'] ?? "User";
             final photoUrl = authUser.photoURL;
 
-            return StreamBuilder<List<Book>>(
-              stream: _authService.getUserLibraryStreamRemote(authUser.uid),
+            return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: _authService.getUserLibraryStream(authUser.uid),
               builder: (context, librarySnapshot) {
-                final books = librarySnapshot.data ?? [];
+                final booksDocs = librarySnapshot.data?.docs ?? [];
+                final books = booksDocs.map((doc) => doc.data()).toList();
                 final totalBooks = books.length;
-                final completedBooks = books.where((b) => b.isCompleted).length;
-                final readingHours = 158;  // Calculate dynamically if needed
+                final completedBooks =
+                    books.where((b) => b['isCompleted'] == true).length;
+                final readingHours = 158; // Derived stat
 
                 return SafeArea(
                   bottom: false,
                   child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
@@ -115,7 +170,11 @@ class ProfileScreenState extends State<ProfileScreen> {
                                       ?.color,
                                 ),
                                 onPressed: () {
-                                  context.go('/');
+                                  if (context.canPop()) {
+                                    context.pop();
+                                  } else {
+                                    context.go('/');
+                                  }
                                 },
                               ),
                               IconButton(
@@ -131,7 +190,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                           Center(
                             child: Column(
                               children: [
-                                GestureDetector(
+                                BouncyTap(
                                   onTap: _pickProfilePhoto,
                                   child: Container(
                                     width: 100,
@@ -141,9 +200,8 @@ class ProfileScreenState extends State<ProfileScreen> {
                                       color: Colors.grey[300],
                                       boxShadow: [
                                         BoxShadow(
-                                          color:
-                                          Theme.of(context).brightness ==
-                                              Brightness.light
+                                          color: Theme.of(context).brightness ==
+                                                  Brightness.light
                                               ? Colors.black12
                                               : Colors.white12,
                                           blurRadius: 8,
@@ -153,26 +211,26 @@ class ProfileScreenState extends State<ProfileScreen> {
                                     ),
                                     child: photoUrl != null
                                         ? ClipOval(
-                                      child: Image.network(
-                                        photoUrl,
-                                        fit: BoxFit.cover,
-                                        width: 100,
-                                        height: 100,
-                                        errorBuilder: (context, error,
-                                            stackTrace) {
-                                          return const Icon(
+                                            child: Image.network(
+                                              photoUrl,
+                                              fit: BoxFit.cover,
+                                              width: 100,
+                                              height: 100,
+                                              errorBuilder:
+                                                  (context, error, stackTrace) {
+                                                return const Icon(
+                                                  Icons.person,
+                                                  size: 50,
+                                                  color: Colors.grey,
+                                                );
+                                              },
+                                            ),
+                                          )
+                                        : const Icon(
                                             Icons.person,
                                             size: 50,
                                             color: Colors.grey,
-                                          );
-                                        },
-                                      ),
-                                    )
-                                        : const Icon(
-                                      Icons.person,
-                                      size: 50,
-                                      color: Colors.grey,
-                                    ),
+                                          ),
                                   ),
                                 ),
                                 const SizedBox(height: 12),
@@ -182,35 +240,35 @@ class ProfileScreenState extends State<ProfileScreen> {
                                       .textTheme
                                       .headlineMedium
                                       ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.color,
-                                  ),
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.color,
+                                      ),
                                 ),
                                 const SizedBox(height: 8),
                                 Text.rich(
                                   TextSpan(
                                     children: [
                                       TextSpan(
-                                        text: "You're rock! ",
+                                        text: "You rock! ",
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodyMedium
                                             ?.copyWith(
-                                          color: Colors.grey,
-                                        ),
+                                              color: Colors.grey,
+                                            ),
                                       ),
                                       TextSpan(
                                         text:
-                                        "You've finished last book in 3 days 🔥",
+                                            "Keep up your reading streak 🔥",
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodyMedium
                                             ?.copyWith(
-                                          color: Colors.grey,
-                                        ),
+                                              color: Colors.grey,
+                                            ),
                                       ),
                                     ],
                                   ),
@@ -226,35 +284,41 @@ class ProfileScreenState extends State<ProfileScreen> {
                             title: "Notifications",
                             hasBadge: true,
                             badgeCount: 2,
-                            onTap: () {},
+                            onTap: () => context.push('/notifications'),
                           ),
                           _buildOptionTile(
                             context,
                             icon: Icons.bookmark_border,
                             title: "Bookmarks",
-                            onTap: () {},
+                            onTap: () => context.push('/bookmarks'),
                           ),
                           _buildOptionTile(
                             context,
                             icon: Icons.star_border,
                             title: "Subscription plan",
-                            onTap: () {},
+                            onTap: () => context.push('/subscription'),
                           ),
                           _buildOptionTile(
                             context,
                             icon: Icons.settings_outlined,
                             title: "Account settings",
-                            onTap: () {},
+                            onTap: () => context.push('/account-settings'),
                           ),
                           const SizedBox(height: 24),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              _buildStatItem(context, "$totalBooks books\nyou have",
+                              _buildStatItem(
+                                  context,
+                                  "$totalBooks books\nyou have",
                                   Icons.book_outlined),
-                              _buildStatItem(context, "$readingHours h\nof reading",
+                              _buildStatItem(
+                                  context,
+                                  "$readingHours h\nof reading",
                                   Icons.timer_outlined),
-                              _buildStatItem(context, "$completedBooks books\ndone",
+                              _buildStatItem(
+                                  context,
+                                  "$completedBooks books\ndone",
                                   Icons.check_circle_outline),
                             ],
                           ),
@@ -268,30 +332,57 @@ class ProfileScreenState extends State<ProfileScreen> {
                                     .textTheme
                                     .bodyLarge
                                     ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                      fontWeight: FontWeight.bold,
+                                    ),
                               ),
-                              Icon(
-                                Icons.arrow_forward,
-                                size: 20,
-                                color: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.color,
+                              BouncyTap(
+                                onTap: () => context.go('/library'),
+                                child: const Icon(
+                                  Icons.arrow_forward,
+                                  size: 20,
+                                ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 16),
                           SizedBox(
-                            height: 200,
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: books.length,
-                              itemBuilder: (context, index) {
-                                return _buildBookshelfItem(
-                                    context, books[index].coverUrl ?? '');
-                              },
-                            ),
+                            height: 140,
+                            child: books.isEmpty
+                                ? Center(
+                                    child: Text(
+                                      "No books in library",
+                                      style: TextStyle(color: Colors.grey[500]),
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: books.length,
+                                    itemBuilder: (context, index) {
+                                      final b = books[index];
+                                      final imagePath =
+                                          b['imagePath'] as String? ?? '';
+                                      final filePath = b['filePath'] as String?;
+                                      final downloaded =
+                                          b['downloaded'] == true;
+                                      return _buildBookshelfItem(
+                                        context,
+                                        imagePath: imagePath,
+                                        onTap: () {
+                                          if (downloaded && filePath != null) {
+                                            context.push('/reader', extra: {
+                                              'bookId':
+                                                  b['bookId'].toString(),
+                                              'filePath': filePath,
+                                              'bookTitle':
+                                                  b['title'] ?? 'Book',
+                                              'fileType':
+                                                  b['fileType'] ?? 'epub',
+                                            });
+                                          }
+                                        },
+                                      );
+                                    },
+                                  ),
                           ),
                           const SizedBox(height: 120),
                         ],
@@ -308,43 +399,45 @@ class ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildOptionTile(
-      BuildContext context, {
-        required IconData icon,
-        required String title,
-        Color? titleColor,
-        bool hasBadge = false,
-        int badgeCount = 0,
-        required VoidCallback onTap,
-      }) {
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: titleColor ?? Theme.of(context).textTheme.bodyMedium?.color,
-      ),
-      title: Text(
-        title,
-        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-          color:
-          titleColor ?? Theme.of(context).textTheme.bodyMedium?.color,
-        ),
-      ),
-      trailing: hasBadge
-          ? Container(
-        padding: const EdgeInsets.all(6),
-        decoration: const BoxDecoration(
-          color: Colors.red,
-          shape: BoxShape.circle,
-        ),
-        child: Text(
-          badgeCount.toString(),
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-          ),
-        ),
-      )
-          : null,
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    Color? titleColor,
+    bool hasBadge = false,
+    int badgeCount = 0,
+    required VoidCallback onTap,
+  }) {
+    return BouncyTap(
       onTap: onTap,
+      child: ListTile(
+        leading: Icon(
+          icon,
+          color: titleColor ?? Theme.of(context).textTheme.bodyMedium?.color,
+        ),
+        title: Text(
+          title,
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color:
+                    titleColor ?? Theme.of(context).textTheme.bodyMedium?.color,
+              ),
+        ),
+        trailing: hasBadge
+            ? Container(
+                padding: const EdgeInsets.all(6),
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  badgeCount.toString(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
+                ),
+              )
+            : null,
+      ),
     );
   }
 
@@ -360,29 +453,54 @@ class ProfileScreenState extends State<ProfileScreen> {
         Text(
           label,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).textTheme.bodyMedium?.color,
-          ),
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
           textAlign: TextAlign.center,
         ),
       ],
     );
   }
 
-  Widget _buildBookshelfItem(BuildContext context, String imageUrl) {
-    return Container(
-      margin: const EdgeInsets.only(right: 16),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: imageUrl.isNotEmpty
-            ? CachedNetworkImage(
-          imageUrl: imageUrl,
-          width: 80,
-          height: 120,
-          fit: BoxFit.cover,
-          placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-          errorWidget: (context, url, error) => const Icon(Icons.book),
-        )
-            : const Icon(Icons.book, size: 80),
+  Widget _buildBookshelfItem(
+    BuildContext context, {
+    required String imagePath,
+    required VoidCallback onTap,
+  }) {
+    Widget imageWidget;
+    if (imagePath.startsWith('assets/')) {
+      imageWidget = Image.asset(
+        imagePath,
+        width: 80,
+        height: 120,
+        fit: BoxFit.cover,
+      );
+    } else if (imagePath.isNotEmpty) {
+      imageWidget = CachedNetworkImage(
+        imageUrl: imagePath,
+        width: 80,
+        height: 120,
+        fit: BoxFit.cover,
+        placeholder: (context, url) =>
+            const Center(child: CircularProgressIndicator()),
+        errorWidget: (context, url, error) => const Icon(Icons.book),
+      );
+    } else {
+      imageWidget = Container(
+        width: 80,
+        height: 120,
+        color: Colors.grey[300],
+        child: const Icon(Icons.book, size: 40),
+      );
+    }
+
+    return BouncyTap(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(right: 16),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: imageWidget,
+        ),
       ),
     );
   }

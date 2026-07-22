@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:readrift/widgets/book_carousel.dart';
 import 'package:go_router/go_router.dart';
 import 'package:readrift/theme.dart';
+import 'package:readrift/widgets/bouncy_tap.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -74,6 +75,7 @@ class HomeScreenState extends State<HomeScreen> {
               body: SafeArea(
                 bottom: false,
                 child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
@@ -81,6 +83,7 @@ class HomeScreenState extends State<HomeScreen> {
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
                               dayOfWeek,
@@ -91,15 +94,44 @@ class HomeScreenState extends State<HomeScreen> {
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
-                            Text(
-                              formattedDate,
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Theme.of(context).textTheme.bodyMedium?.color,
-                                fontFamily: 'SFProRounded',
-                                fontWeight: FontWeight.w600,
-                                fontSize: 18,
-                              ),
-                              textAlign: TextAlign.right,
+                            Row(
+                              children: [
+                                Text(
+                                  formattedDate,
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                                    fontFamily: 'SFProRounded',
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 18,
+                                  ),
+                                  textAlign: TextAlign.right,
+                                ),
+                                const SizedBox(width: 12),
+                                BouncyTap(
+                                  onTap: () => context.push('/bookmarks'),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).brightness == Brightness.light
+                                          ? Colors.white
+                                          : const Color(0xFF2C2C2C),
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.08),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.bookmark_outline_rounded,
+                                      color: AppColors.accentOrange,
+                                      size: 22,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -113,34 +145,37 @@ class HomeScreenState extends State<HomeScreen> {
                                 color: Theme.of(context).textTheme.bodyMedium?.color,
                               ),
                             ),
-                            Container(
-                              width: 35,
-                              height: 35,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.grey[300],
-                              ),
-                              child: photoUrl != null
-                                  ? ClipOval(
-                                      child: Image.network(
-                                        photoUrl,
-                                        fit: BoxFit.cover,
-                                        width: 35,
-                                        height: 35,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return const Icon(
-                                            Icons.person,
-                                            size: 24,
-                                            color: Colors.grey,
-                                          );
-                                        },
+                            BouncyTap(
+                              onTap: () => context.go('/profile'),
+                              child: Container(
+                                width: 35,
+                                height: 35,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.grey[300],
+                                ),
+                                child: photoUrl != null
+                                    ? ClipOval(
+                                        child: Image.network(
+                                          photoUrl,
+                                          fit: BoxFit.cover,
+                                          width: 35,
+                                          height: 35,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return const Icon(
+                                              Icons.person,
+                                              size: 24,
+                                              color: Colors.grey,
+                                            );
+                                          },
+                                        ),
+                                      )
+                                    : const Icon(
+                                        Icons.person,
+                                        size: 24,
+                                        color: Colors.grey,
                                       ),
-                                    )
-                                  : const Icon(
-                                      Icons.person,
-                                      size: 24,
-                                      color: Colors.grey,
-                                    ),
+                              ),
                             ),
                             Text(
                               " $username",

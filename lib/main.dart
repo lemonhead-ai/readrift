@@ -237,27 +237,28 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class ScaffoldWithDock extends StatefulWidget {
+class ScaffoldWithDock extends StatelessWidget {
   final Widget child;
   const ScaffoldWithDock({super.key, required this.child});
 
-  @override
-  State<ScaffoldWithDock> createState() => _ScaffoldWithDockState();
-}
-
-class _ScaffoldWithDockState extends State<ScaffoldWithDock> {
-  int _selectedIndex = 0;
+  int _calculateSelectedIndex(BuildContext context) {
+    final location = GoRouterState.of(context).matchedLocation;
+    if (location == '/search') return 1;
+    if (location == '/library') return 2;
+    if (location == '/profile') return 3;
+    return 0;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final selectedIndex = _calculateSelectedIndex(context);
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
-      body: widget.child,
+      body: child,
       bottomNavigationBar: Dock(
-        selectedIndex: _selectedIndex,
+        selectedIndex: selectedIndex,
         onItemTapped: (index) {
-          setState(() => _selectedIndex = index);
           switch (index) {
             case 0:
               context.go('/');
