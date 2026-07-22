@@ -8,6 +8,9 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:readrift/widgets/bouncy_tap.dart';
+import 'package:readrift/widgets/custom_toast.dart';
+
+
 
 
 class LibraryScreen extends StatefulWidget {
@@ -59,15 +62,11 @@ class LibraryScreenState extends State<LibraryScreen> {
         await _authService.addBookToLibrary(user.uid, bookMetadata);
 
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Imported '$title' successfully!")),
-        );
+        ToastService.showSuccess(context, "Imported '$title' successfully!");
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to import book: $e")),
-      );
+      ToastService.showError(context, "Failed to import book: $e");
     }
   }
 
@@ -318,10 +317,9 @@ class LibraryScreenState extends State<LibraryScreen> {
             'fileType': book['fileType'] ?? 'epub',
           });
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text(
-                    "Please re-download this book from the Search tab to read.")),
+          ToastService.showInfo(
+            context,
+            "Please re-download this book from the Search tab to read.",
           );
         }
       },

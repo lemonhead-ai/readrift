@@ -20,20 +20,11 @@ import 'package:readrift/screens/reader_screen.dart';
 import 'package:readrift/theme.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
-import 'package:readrift/services/book_service.dart';
 import 'package:readrift/screens/dock.dart';
-import 'package:readrift/models/book.dart';
+import 'package:readrift/providers/book_provider.dart';
+import 'package:readrift/providers/theme_provider.dart';
 import 'package:readrift/theme/page_transitions.dart';
 
-class BookProvider with ChangeNotifier {
-  List<Book> recommendations = [];
-  List<Book> library = [];
-
-  Future<void> fetchRecommendations() async {
-    recommendations = await BookService().getRecommendations();
-    notifyListeners();
-  }
-}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,6 +41,7 @@ void main() async {
   runApp(MultiProvider(
     providers: [
       ChangeNotifierProvider(create: (_) => BookProvider()),
+      ChangeNotifierProvider(create: (_) => ThemeProvider()),
     ],
     child: const MyApp(),
   ));
@@ -222,13 +214,14 @@ class MyApp extends StatelessWidget {
       ),
     );
 
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Directionality(
       textDirection: TextDirection.ltr,
       child: BlurredStatusBar(
         child: MaterialApp.router(
           theme: lightTheme(),
           darkTheme: darkTheme(),
-          themeMode: ThemeMode.system,
+          themeMode: themeProvider.themeMode,
           routerConfig: _router,
           debugShowCheckedModeBanner: false,
         ),

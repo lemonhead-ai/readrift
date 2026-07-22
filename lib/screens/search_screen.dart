@@ -9,6 +9,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import 'package:readrift/widgets/custom_toast.dart';
+
+
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -176,10 +179,7 @@ class SearchScreenState extends State<SearchScreen> {
 
     final downloadUrl = book['downloadUrl'] as String?;
     if (downloadUrl == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text("No download link available for this book.")),
-      );
+      ToastService.showWarning(context, "No download link available for this book.");
       return;
     }
 
@@ -217,17 +217,13 @@ class SearchScreenState extends State<SearchScreen> {
         await _syncDownloadedBooks(); // Sync locally
 
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("${book["title"]} downloaded successfully!")),
-        );
+        ToastService.showSuccess(context, "${book["title"]} downloaded successfully!");
       } else {
         throw Exception("Server returned status: ${response.statusCode}");
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to download book: $e")),
-      );
+      ToastService.showError(context, "Failed to download book: $e");
     } finally {
       if (mounted) {
         setState(() {

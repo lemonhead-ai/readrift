@@ -8,9 +8,10 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:provider/provider.dart';
+import 'package:readrift/providers/theme_provider.dart';
+import 'package:readrift/theme.dart';
 import 'package:readrift/widgets/bouncy_tap.dart';
-import 'package:readrift/models/book.dart';
-import 'package:readrift/widgets/custom_toast.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -61,9 +62,13 @@ class ProfileScreenState extends State<ProfileScreen> {
       String? error = await _authService.updateProfilePhoto(photoFile);
       if (!mounted) return;
       if (error == null) {
-        ToastService.showSuccess(context, "Your profile photo has been updated!");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Profile photo updated successfully!")),
+        );
       } else {
-        ToastService.showError(context, error);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error)),
+        );
       }
     }
   }
@@ -84,9 +89,6 @@ class ProfileScreenState extends State<ProfileScreen> {
             onPressed: () async {
               Navigator.pop(context);
               await _authService.signOut();
-              if (mounted) {
-                ToastService.showInfo(context, "You've been signed out");
-              }
             },
             child: const Text("Sign Out"),
           ),
@@ -148,12 +150,15 @@ class ProfileScreenState extends State<ProfileScreen> {
                 final totalBooks = books.length;
                 final completedBooks =
                     books.where((b) => b['isCompleted'] == true).length;
-                final readingHours = 158; // Derived stat
+                final readingHours = 158;
+
+                final textColor = Theme.of(context).colorScheme.onSurface;
 
                 return SafeArea(
                   bottom: false,
                   child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                    physics: const BouncingScrollPhysics(
+                        parent: AlwaysScrollableScrollPhysics()),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
@@ -165,10 +170,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                               IconButton(
                                 icon: Icon(
                                   Icons.arrow_back,
-                                  color: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.color,
+                                  color: textColor,
                                 ),
                                 onPressed: () {
                                   if (context.canPop()) {
@@ -181,7 +183,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                               IconButton(
                                 icon: const Icon(
                                   Icons.logout,
-                                  color: Colors.red,
+                                  color: Colors.redAccent,
                                 ),
                                 onPressed: _signOut,
                               ),
@@ -242,36 +244,15 @@ class ProfileScreenState extends State<ProfileScreen> {
                                       .headlineMedium
                                       ?.copyWith(
                                         fontWeight: FontWeight.bold,
-                                        color: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.color,
+                                        color: textColor,
                                       ),
                                 ),
                                 const SizedBox(height: 8),
-                                Text.rich(
-                                  TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: "You rock! ",
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              color: Colors.grey,
-                                            ),
-                                      ),
-                                      TextSpan(
-                                        text:
-                                            "Keep up your reading streak 🔥",
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              color: Colors.grey,
-                                            ),
-                                      ),
-                                    ],
+                                Text(
+                                  "You rock! Keep up your reading streak 🔥",
+                                  style: TextStyle(
+                                    color: textColor.withValues(alpha: 0.7),
+                                    fontSize: 14,
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
@@ -279,6 +260,11 @@ class ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                           const SizedBox(height: 24),
+                          
+                          // Theme Mode Selector
+                          _buildThemeSelector(context),
+                          const SizedBox(height: 20),
+
                           _buildOptionTile(
                             context,
                             icon: Icons.notifications_outlined,
@@ -289,13 +275,13 @@ class ProfileScreenState extends State<ProfileScreen> {
                           ),
                           _buildOptionTile(
                             context,
-                            icon: Icons.bookmark_border,
+                            icon: Icons.bookmark_border_rounded,
                             title: "Bookmarks",
                             onTap: () => context.push('/bookmarks'),
                           ),
                           _buildOptionTile(
                             context,
-                            icon: Icons.star_border,
+                            icon: Icons.star_border_rounded,
                             title: "Subscription plan",
                             onTap: () => context.push('/subscription'),
                           ),
@@ -334,13 +320,15 @@ class ProfileScreenState extends State<ProfileScreen> {
                                     .bodyLarge
                                     ?.copyWith(
                                       fontWeight: FontWeight.bold,
+                                      color: textColor,
                                     ),
                               ),
                               BouncyTap(
                                 onTap: () => context.go('/library'),
-                                child: const Icon(
+                                child: Icon(
                                   Icons.arrow_forward,
                                   size: 20,
+                                  color: textColor,
                                 ),
                               ),
                             ],
@@ -352,7 +340,8 @@ class ProfileScreenState extends State<ProfileScreen> {
                                 ? Center(
                                     child: Text(
                                       "No books in library",
-                                      style: TextStyle(color: Colors.grey[500]),
+                                      style: TextStyle(
+                                          color: textColor.withValues(alpha: 0.5)),
                                     ),
                                   )
                                 : ListView.builder(
@@ -399,6 +388,105 @@ class ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _buildThemeSelector(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final currentMode = themeProvider.themeMode;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF18181C) : Colors.grey[200],
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildThemeSegment(
+              context,
+              label: "System",
+              icon: Icons.brightness_auto_rounded,
+              isSelected: currentMode == ThemeMode.system,
+              onTap: () => themeProvider.setThemeMode(ThemeMode.system),
+            ),
+          ),
+          Expanded(
+            child: _buildThemeSegment(
+              context,
+              label: "Snowy",
+              icon: Icons.wb_sunny_rounded,
+              isSelected: currentMode == ThemeMode.light,
+              onTap: () => themeProvider.setThemeMode(ThemeMode.light),
+            ),
+          ),
+          Expanded(
+            child: _buildThemeSegment(
+              context,
+              label: "OLED",
+              icon: Icons.dark_mode_rounded,
+              isSelected: currentMode == ThemeMode.dark,
+              onTap: () => themeProvider.setThemeMode(ThemeMode.dark),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThemeSegment(
+    BuildContext context, {
+    required String label,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return BouncyTap(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.accentOrange
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.accentOrange.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : [],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: isSelected
+                  ? Colors.white
+                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isSelected
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildOptionTile(
     BuildContext context, {
     required IconData icon,
@@ -408,25 +496,27 @@ class ProfileScreenState extends State<ProfileScreen> {
     int badgeCount = 0,
     required VoidCallback onTap,
   }) {
+    final defaultColor = Theme.of(context).colorScheme.onSurface;
+
     return BouncyTap(
       onTap: onTap,
       child: ListTile(
         leading: Icon(
           icon,
-          color: titleColor ?? Theme.of(context).textTheme.bodyMedium?.color,
+          color: titleColor ?? defaultColor,
         ),
         title: Text(
           title,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color:
-                    titleColor ?? Theme.of(context).textTheme.bodyMedium?.color,
+                color: titleColor ?? defaultColor,
+                fontWeight: FontWeight.w500,
               ),
         ),
         trailing: hasBadge
             ? Container(
                 padding: const EdgeInsets.all(6),
                 decoration: const BoxDecoration(
-                  color: Colors.red,
+                  color: Colors.redAccent,
                   shape: BoxShape.circle,
                 ),
                 child: Text(
@@ -434,27 +524,34 @@ class ProfileScreenState extends State<ProfileScreen> {
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               )
-            : null,
+            : Icon(
+                Icons.chevron_right_rounded,
+                color: defaultColor.withValues(alpha: 0.4),
+              ),
       ),
     );
   }
 
   Widget _buildStatItem(BuildContext context, String label, IconData icon) {
+    final textColor = Theme.of(context).colorScheme.onSurface;
+
     return Column(
       children: [
         Icon(
           icon,
           size: 24,
-          color: Theme.of(context).textTheme.bodyMedium?.color,
+          color: AppColors.accentOrange,
         ),
         const SizedBox(height: 8),
         Text(
           label,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).textTheme.bodyMedium?.color,
+                color: textColor,
+                fontWeight: FontWeight.w500,
               ),
           textAlign: TextAlign.center,
         ),
@@ -482,7 +579,7 @@ class ProfileScreenState extends State<ProfileScreen> {
         height: 120,
         fit: BoxFit.cover,
         placeholder: (context, url) =>
-            const Center(child: CircularProgressIndicator()),
+            const Center(child: CircularProgressIndicator.adaptive()),
         errorWidget: (context, url, error) => const Icon(Icons.book),
       );
     } else {
@@ -506,7 +603,3 @@ class ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
-
-
-
-

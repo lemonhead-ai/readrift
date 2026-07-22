@@ -7,6 +7,8 @@ import 'package:go_router/go_router.dart';
 import 'package:readrift/security/auth_service.dart';
 import 'package:readrift/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:readrift/widgets/custom_toast.dart';
+
 
 class ReaderScreen extends StatefulWidget {
   final String bookId;
@@ -107,12 +109,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
       await _authService.updateDownloadStatus(user.uid, widget.bookId, false);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Finished reading! Local file cleared to free space."),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 4),
-          ),
+        ToastService.showSuccess(
+          context,
+          "Finished reading! Local file cleared to free space.",
         );
       }
     } catch (e) {
@@ -339,11 +338,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
                           // Theme Background selector
                           Row(
                             children: [
-                              _buildThemeButton(AppColors.warmWhite, Colors.black, "Sepia"),
+                              _buildThemeButton(AppColors.sepia, Colors.black87, "Sepia"),
                               const SizedBox(width: 8),
-                              _buildThemeButton(Colors.white, Colors.black, "Light"),
+                              _buildThemeButton(AppColors.snowyWhite, Colors.black87, "Snowy"),
                               const SizedBox(width: 8),
-                              _buildThemeButton(Colors.grey[900]!, Colors.white70, "Dark"),
+                              _buildThemeButton(AppColors.oledBlack, Colors.white, "OLED"),
                             ],
                           ),
                         ],
