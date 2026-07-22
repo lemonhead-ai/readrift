@@ -119,10 +119,68 @@ class _ReaderScreenState extends State<ReaderScreen> {
     }
   }
 
-  void _toggleControlOverlay() {
-    setState(() {
-      _isControlOverlayVisible = !_isControlOverlayVisible;
-    });
+  List<EpubChapter>? _chapters;
+
+  void _showTableOfContents() {
+    if (_chapters == null || _chapters!.isEmpty) {
+      ToastService.showInfo(context, "No table of contents available.");
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: _themeBgColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.withAlpha(100),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                "Table of Contents",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _chapters!.length,
+                itemBuilder: (context, index) {
+                  final chapter = _chapters![index];
+                  return ListTile(
+                    title: Text(
+                      chapter.Title?.trim() ?? "Chapter ${index + 1}",
+                      style: TextStyle(
+                        color: _themeBgColor == Colors.grey[900]
+                            ? Colors.white
+                            : Colors.black87,
+                      ),
+                    ),
+                    onTap: () {
+                      if (chapter.Anchor != null) {
+                        _epubReaderController?.scrollTo(index: index);
+                      }
+                      Navigator.pop(context);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _changeBgColor(Color color, Color textColor) {
@@ -164,6 +222,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                           controller: _epubReaderController!,
                           onDocumentLoaded: (document) {
                             _totalChapters = document.Chapters?.length ?? 1;
+                            _chapters = document.Chapters;
                             _loadSavedProgress();
                           },
                           onChapterChanged: (value) {
@@ -251,9 +310,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.menu_rounded, color: Colors.white),
-                        onPressed: () {
-                          // Optional Table of Contents feature
-                        },
+                        onPressed: _showTableOfContents,
                       ),
                     ],
                   ),

@@ -9,7 +9,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-import 'package:readrift/widgets/custom_toast.dart';
+import 'package:readrift/widgets/skeleton_loader.dart';
 
 
 
@@ -416,11 +416,32 @@ class SearchScreenState extends State<SearchScreen> {
                         ),
                         const SizedBox(height: 10),
                         if (_isLoading)
-                          const Padding(
-                            padding: EdgeInsets.all(32.0),
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                color: AppColors.accentOrange,
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              children: List.generate(
+                                5,
+                                (index) => const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                                  child: Row(
+                                    children: [
+                                      SkeletonLoader(width: 80, height: 120),
+                                      SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            SkeletonLoader(width: 200, height: 20),
+                                            SizedBox(height: 8),
+                                            SkeletonLoader(width: 120, height: 16),
+                                            SizedBox(height: 16),
+                                            SkeletonLoader(width: 80, height: 32),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -452,6 +473,33 @@ class SearchScreenState extends State<SearchScreen> {
                             ],
                           ),
                         if (!_isSearchFocused && !_isSearching) ...[
+                          Text(
+                            "Categories",
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? AppColors.lightText
+                                      : AppColors.darkText,
+                                ),
+                          ),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              _buildCategoryChip(context, "Fiction", Icons.auto_stories_rounded),
+                              _buildCategoryChip(context, "Science", Icons.science_rounded),
+                              _buildCategoryChip(context, "History", Icons.history_edu_rounded),
+                              _buildCategoryChip(context, "Mystery", Icons.search_rounded),
+                              _buildCategoryChip(context, "Philosophy", Icons.psychology_rounded),
+                              _buildCategoryChip(context, "Poetry", Icons.feather_rounded),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
                           Text(
                             "Recent Searches",
                             style: Theme.of(context)
@@ -502,6 +550,41 @@ class SearchScreenState extends State<SearchScreen> {
           },
         );
       },
+    );
+  }
+
+  Widget _buildCategoryChip(BuildContext context, String label, IconData icon) {
+    return BouncyTap(
+      onTap: () {
+        _searchController.text = label;
+        _performSearch(label);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.accentOrange.withAlpha(20),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: AppColors.accentOrange.withAlpha(50),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 18, color: AppColors.accentOrange),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: AppColors.accentOrange,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

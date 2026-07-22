@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:readrift/widgets/book_carousel.dart';
 import 'package:go_router/go_router.dart';
 import 'package:readrift/theme.dart';
-import 'package:readrift/widgets/bouncy_tap.dart';
+import 'package:readrift/widgets/skeleton_loader.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,6 +17,84 @@ class HomeScreen extends StatefulWidget {
 
 class HomeScreenState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
+
+  Widget _buildDailyGoalWidget(BuildContext context) {
+    const double goalMinutes = 20.0;
+    const double currentMinutes = 12.0; // Simulated progress
+    const int streak = 4;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).brightness == Brightness.light
+            ? Colors.grey[100]
+            : Colors.grey[900],
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: AppColors.accentOrange.withAlpha(50),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                width: 60,
+                height: 60,
+                child: CircularProgressIndicator(
+                  value: currentMinutes / goalMinutes,
+                  strokeWidth: 6,
+                  backgroundColor: Colors.grey.withAlpha(50),
+                  valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accentOrange),
+                  strokeCap: StrokeCap.round,
+                ),
+              ),
+              const Icon(Icons.auto_stories_rounded, color: AppColors.accentOrange, size: 24),
+            ],
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Daily Goal",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                Text(
+                  "${currentMinutes.toInt()} / ${goalMinutes.toInt()} mins read today",
+                  style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.accentOrange.withAlpha(30),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.local_fire_department_rounded, color: AppColors.accentOrange, size: 18),
+                const SizedBox(width: 4),
+                Text(
+                  "$streak",
+                  style: const TextStyle(
+                    color: AppColors.accentOrange,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   String _getRemainingReadingTime() {
     return "5 hrs";
@@ -88,7 +166,7 @@ class HomeScreenState extends State<HomeScreen> {
                             Text(
                               dayOfWeek,
                               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                color: Colors.orange,
+                                color: AppColors.accentOrange,
                                 fontSize: 60,
                                 fontFamily: 'SFProRounded',
                                 fontWeight: FontWeight.w900,
@@ -158,21 +236,32 @@ class HomeScreenState extends State<HomeScreen> {
                                   .textTheme
                                   .headlineMedium
                                   ?.copyWith(
-                                    color: Colors.orange,
+                                    color: AppColors.accentOrange,
                                   ),
                             ),
                             const SizedBox(width: 8),
                           ],
                         ),
                         const SizedBox(height: 16),
+                        _buildDailyGoalWidget(context),
+                        const SizedBox(height: 16),
                         StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                           stream: _authService.getUserLibraryStream(authUser.uid),
                           builder: (context, librarySnapshot) {
                             if (librarySnapshot.connectionState == ConnectionState.waiting) {
-                              return Center(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(32.0),
-                                  child: CircularProgressIndicator(color: AppColors.accentOrange),
+                              return const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 32.0),
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: [
+                                      BookCardSkeleton(),
+                                      SizedBox(width: 16),
+                                      BookCardSkeleton(),
+                                      SizedBox(width: 16),
+                                      BookCardSkeleton(),
+                                    ],
+                                  ),
                                 ),
                               );
                             }
@@ -265,6 +354,8 @@ class HomeScreenState extends State<HomeScreen> {
                                   },
                                 ),
                                 const SizedBox(height: 16),
+                        _buildDailyGoalWidget(context),
+                        const SizedBox(height: 16),
                                 Text.rich(
                                   TextSpan(
                                     children: [
@@ -286,7 +377,7 @@ class HomeScreenState extends State<HomeScreen> {
                                             .bodyLarge
                                             ?.copyWith(
                                                 fontWeight: FontWeight.bold,
-                                                color: Colors.orange),
+                                                color: AppColors.accentOrange),
                                       ),
                                       TextSpan(
                                         text: ". You have 📚 ",
@@ -305,7 +396,7 @@ class HomeScreenState extends State<HomeScreen> {
                                             .bodyLarge
                                             ?.copyWith(
                                                 fontWeight: FontWeight.bold,
-                                                color: Colors.orange),
+                                                color: AppColors.accentOrange),
                                       ),
                                       TextSpan(
                                         text:
@@ -324,7 +415,7 @@ class HomeScreenState extends State<HomeScreen> {
                                             .bodyLarge
                                             ?.copyWith(
                                                 fontWeight: FontWeight.bold,
-                                                color: Colors.orange),
+                                                color: AppColors.accentOrange),
                                       ),
                                     ],
                                   ),
