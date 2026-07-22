@@ -15,6 +15,7 @@ import 'package:readrift/screens/notifications_screen.dart';
 import 'package:readrift/screens/bookmarks_screen.dart';
 import 'package:readrift/screens/subscription_screen.dart';
 import 'package:readrift/screens/account_settings_screen.dart';
+import 'package:readrift/screens/reader_screen.dart';
 import 'package:readrift/theme.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:readrift/theme/page_transitions.dart';
@@ -44,51 +45,115 @@ class MyApp extends StatelessWidget {
     routes: [
       GoRoute(
         path: '/welcome',
-        builder: (context, state) => const WelcomeScreen(),
+        pageBuilder: (context, state) => buildAdaptivePageRoute(
+          context: context,
+          state: state,
+          child: const WelcomeScreen(),
+        ),
       ),
       GoRoute(
         path: '/',
-        builder: (context, state) => const HomeScreen(),
+        pageBuilder: (context, state) => buildAdaptivePageRoute(
+          context: context,
+          state: state,
+          child: const HomeScreen(),
+        ),
       ),
       GoRoute(
         path: '/profile',
-        builder: (context, state) => const ProfileScreen(),
+        pageBuilder: (context, state) => buildAdaptivePageRoute(
+          context: context,
+          state: state,
+          child: const ProfileScreen(),
+        ),
       ),
       GoRoute(
         path: '/search',
-        builder: (context, state) => const SearchScreen(),
+        pageBuilder: (context, state) => buildAdaptivePageRoute(
+          context: context,
+          state: state,
+          child: const SearchScreen(),
+        ),
       ),
       GoRoute(
         path: '/library',
-        builder: (context, state) => const LibraryScreen(),
+        pageBuilder: (context, state) => buildAdaptivePageRoute(
+          context: context,
+          state: state,
+          child: const LibraryScreen(),
+        ),
       ),
       GoRoute(
         path: '/login',
-        builder: (context, state) => const LoginScreen(),
+        pageBuilder: (context, state) => buildAdaptivePageRoute(
+          context: context,
+          state: state,
+          child: const LoginScreen(),
+        ),
       ),
       GoRoute(
         path: '/signup',
-        builder: (context, state) => const SignUpScreen(),
+        pageBuilder: (context, state) => buildAdaptivePageRoute(
+          context: context,
+          state: state,
+          child: const SignUpScreen(),
+        ),
       ),
       GoRoute(
         path: '/reset-password',
-        builder: (context, state) => const ResetPasswordScreen(),
+        pageBuilder: (context, state) => buildAdaptivePageRoute(
+          context: context,
+          state: state,
+          child: const ResetPasswordScreen(),
+        ),
       ),
       GoRoute(
         path: '/notifications',
-        builder: (context, state) => const NotificationsScreen(),
+        pageBuilder: (context, state) => buildAdaptivePageRoute(
+          context: context,
+          state: state,
+          child: const NotificationsScreen(),
+        ),
       ),
       GoRoute(
         path: '/bookmarks',
-        builder: (context, state) => const BookmarksScreen(),
+        pageBuilder: (context, state) => buildAdaptivePageRoute(
+          context: context,
+          state: state,
+          child: const BookmarksScreen(),
+        ),
       ),
       GoRoute(
         path: '/subscription',
-        builder: (context, state) => const SubscriptionScreen(),
+        pageBuilder: (context, state) => buildAdaptivePageRoute(
+          context: context,
+          state: state,
+          child: const SubscriptionScreen(),
+        ),
       ),
       GoRoute(
         path: '/account-settings',
-        builder: (context, state) => const AccountSettingsScreen(),
+        pageBuilder: (context, state) => buildAdaptivePageRoute(
+          context: context,
+          state: state,
+          child: const AccountSettingsScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/reader',
+        pageBuilder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          return buildAdaptivePageRoute(
+            context: context,
+            state: state,
+            child: ReaderScreen(
+              bookId: extra['bookId'] as String,
+              filePath: extra['filePath'] as String,
+              bookTitle: extra['bookTitle'] as String,
+              fileType: extra['fileType'] as String,
+            ),
+          );
+        },
       ),
     ],
     redirect: (BuildContext context, GoRouterState state) {
@@ -114,7 +179,8 @@ class MyApp extends StatelessWidget {
               state.matchedLocation == '/notifications' ||
               state.matchedLocation == '/bookmarks' ||
               state.matchedLocation == '/subscription' ||
-              state.matchedLocation == '/account-settings')) {
+              state.matchedLocation == '/account-settings' ||
+              state.matchedLocation == '/reader')) {
         return '/welcome';
       }
 

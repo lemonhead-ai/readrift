@@ -5,6 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:readrift/screens/dock.dart';
 import 'package:readrift/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -21,78 +26,9 @@ class SearchScreenState extends State<SearchScreen> {
   int _selectedIndex = 1;
   List<Map<String, dynamic>> searchResults = [];
   final AuthService _authService = AuthService();
-
-  List<Map<String, dynamic>> localBooks = [
-    {
-      "title": "1984",
-      "author": "George Orwell",
-      "imagePath": "assets/1984.png",
-      "isCompleted": false,
-    },
-    {
-      "title": "Atomic Habits",
-      "author": "James Clear",
-      "imagePath": "assets/atomic_habits.png",
-      "isCompleted": true,
-    },
-    {
-      "title": "Harry Potter and the Philosopher's Stone",
-      "author": "J.K. Rowling",
-      "imagePath": "assets/harry_potter.png",
-      "isCompleted": false,
-    },
-    {
-      "title": "Hooked",
-      "author": "Nir Eyal",
-      "imagePath": "assets/hooked.png",
-      "isCompleted": true,
-    },
-    {
-      "title": "Rich Dad Poor Dad",
-      "author": "Robert Kiyosaki",
-      "imagePath": "assets/rich_dad.png",
-      "isCompleted": false,
-    },
-    {
-      "title": "The Subtle Art of Not Giving a F*ck",
-      "author": "Mark Manson",
-      "imagePath": "assets/subtle_art.png",
-      "isCompleted": false,
-    },
-    {
-      "title": "The Alchemist",
-      "author": "Paulo Coelho",
-      "imagePath": "assets/the_alchemist.png",
-      "isCompleted": true,
-    },
-  ];
-
-  final List<Map<String, dynamic>> onlineBooks = [
-    {
-      "title": "Pride and Prejudice",
-      "author": "Jane Austen",
-      "isFree": true,
-      "downloadUrl": "https://example.com/pride_and_prejudice.pdf",
-    },
-    {
-      "title": "To Kill a Mockingbird",
-      "author": "Harper Lee",
-      "isFree": false,
-      "downloadUrl": null,
-    },
-    {
-      "title": "The Great Gatsby",
-      "author": "F. Scott Fitzgerald",
-      "isFree": true,
-      "downloadUrl": "https://example.com/the_great_gatsby.pdf",
-    },
-    {
-      "title": "Dune",
-      "author": "Frank Herbert",
-      "isFree": false,
-      "downloadUrl": null,
-    },
-  ];
+  bool _isLoading = false;
+  List<String> _downloadedBookIds = [];
+  Map<String, String> _downloadedBookPaths = {};
 
   @override
   void initState() {
@@ -101,6 +37,45 @@ class SearchScreenState extends State<SearchScreen> {
       setState(() {
         _isSearchFocused = _searchFocusNode.hasFocus;
       });
+    });
+    _loadUserLibrary();
+  }
+
+  void _loadUserLibrary() {
+    final user = _authService.currentUser;
+    if (user != null) {
+      _authService.getUserLibraryStream(user.uid).listen((snapshot) {
+        if (mounted) {
+          setState(() {
+            _downloadedBookIds = snapshot.docs
+                .where((doc) => doc.data()['downloaded'] == true)
+                .map((doc) => doc.id)
+                .toList();
+            _downloadedBookPaths = {
+              for (var doc in snapshot.docs.where((doc) => doc.data()['downloaded'] == true))
+                doc.id: doc.data()['filePath'] as String
+            };
+            // Refresh results if already searching to update button state
+            if (_isSearching) {
+              _updateLocalStatusInResults();
+            }
+          });
+        }
+      });
+    }
+  }
+
+  void _updateLocalStatusInResults() {
+    setState(() {
+      for (var i = 0; i < searchResults.length; i++) {
+        final bookId = searchResults[i]['bookId'].toString();
+        final isLocal = _downloadedBookIds.contains(bookId);
+        searchResults[i] = {
+          ...searchResults[i],
+          'isLocal': isLocal,
+          'filePath': isLocal ? _downloadedBookPaths[bookId] : null,
+        };
+      }
     });
   }
 
@@ -131,52 +106,139 @@ class SearchScreenState extends State<SearchScreen> {
     });
   }
 
-  void _performSearch(String query) {
-    final lowerQuery = query.toLowerCase();
-    searchResults = [];
-
-    final localMatches = localBooks.where((book) {
-      return book["title"].toString().toLowerCase().contains(lowerQuery) ||
-          book["author"].toString().toLowerCase().contains(lowerQuery);
-    }).map((book) => {
-          "title": book["title"],
-          "author": book["author"],
-          "isLocal": true,
-          "isFree": false,
-          "downloadUrl": null,
-        });
-
-    final onlineMatches = onlineBooks.where((book) {
-      return book["title"].toString().toLowerCase().contains(lowerQuery) ||
-          book["author"].toString().toLowerCase().contains(lowerQuery);
-    }).map((book) => {
-          "title": book["title"],
-          "author": book["author"],
-          "isLocal": false,
-          "isFree": book["isFree"],
-          "downloadUrl": book["downloadUrl"],
-        });
-
-    searchResults = [...localMatches, ...onlineMatches];
-  }
-
-  void _downloadBook(Map<String, dynamic> book) {
+  Future<void> _performSearch(String query) async {
     setState(() {
-      localBooks.add({
-        "title": book["title"],
-        "author": book["author"],
-        "imagePath": "assets/default_book.png",
-        "isCompleted": false,
-      });
-      searchResults[searchResults.indexOf(book)] = {
-        ...book,
-        "isLocal": true,
-      };
+      _isLoading = true;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("${book["title"]} downloaded successfully!")),
-    );
+
+    try {
+      final url = Uri.parse(
+          'https://gutendex.com/books/?search=${Uri.encodeComponent(query)}');
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final List results = data['results'] ?? [];
+
+        setState(() {
+          searchResults = results.map((book) {
+            final bookId = book['id'].toString();
+            final formats = book['formats'] as Map<String, dynamic>? ?? {};
+
+            String? epubUrl;
+            String? pdfUrl;
+
+            formats.forEach((key, value) {
+              if (key.toString().contains('epub')) {
+                epubUrl = value.toString();
+              } else if (key.toString().contains('pdf')) {
+                pdfUrl = value.toString();
+              }
+            });
+
+            epubUrl ??= formats['application/epub+zip']?.toString();
+            pdfUrl ??= formats['application/pdf']?.toString();
+
+            final coverUrl = formats['image/jpeg']?.toString() ??
+                'assets/default_book.png';
+
+            final title = book['title'] ?? 'Unknown Title';
+            final authorsList = book['authors'] as List? ?? [];
+            final author = authorsList.isNotEmpty
+                ? (authorsList[0]['name'] ?? 'Unknown Author')
+                : 'Unknown Author';
+
+            final isLocal = _downloadedBookIds.contains(bookId);
+
+            return {
+              "bookId": bookId,
+              "title": title,
+              "author": author,
+              "imagePath": coverUrl,
+              "isLocal": isLocal,
+              "isFree": true,
+              "downloadUrl": epubUrl ?? pdfUrl,
+              "fileType": epubUrl != null ? 'epub' : 'pdf',
+              "filePath": isLocal ? _downloadedBookPaths[bookId] : null,
+            };
+          }).toList();
+        });
+      }
+    } catch (e) {
+      debugPrint("Search error: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
+
+  Future<void> _downloadBook(Map<String, dynamic> book) async {
+    final user = _authService.currentUser;
+    if (user == null) return;
+
+    final downloadUrl = book['downloadUrl'] as String?;
+    if (downloadUrl == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text("No download link available for this book.")),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await http.get(Uri.parse(downloadUrl));
+      if (response.statusCode == 200) {
+        final bytes = response.bodyBytes;
+
+        final dir = await getApplicationDocumentsDirectory();
+        final fileType = book['fileType'] as String? ?? 'epub';
+        final fileName = "${book['bookId']}.$fileType";
+        final file = File("${dir.path}/$fileName");
+
+        await file.writeAsBytes(bytes);
+
+        final bookMetadata = {
+          "bookId": book['bookId'],
+          "title": book['title'],
+          "author": book['author'],
+          "imagePath": book['imagePath'],
+          "downloaded": true,
+          "filePath": file.path,
+          "fileType": fileType,
+          "progressPercent": 0.0,
+          "currentPosition": "",
+          "isCompleted": false,
+        };
+
+        await _authService.addBookToLibrary(user.uid, bookMetadata);
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("${book["title"]} downloaded successfully!")),
+        );
+      } else {
+        throw Exception("Server returned status: ${response.statusCode}");
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to download book: $e")),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
 
   void _onNavIconTapped(int index) {
     setState(() {
@@ -373,7 +435,16 @@ class SearchScreenState extends State<SearchScreen> {
                               ],
                             ),
                             const SizedBox(height: 10),
-                            if (_isSearching && searchResults.isEmpty)
+                            if (_isLoading)
+                              const Padding(
+                                padding: EdgeInsets.all(32.0),
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    color: AppColors.accentOrange,
+                                  ),
+                                ),
+                              ),
+                            if (!_isLoading && _isSearching && searchResults.isEmpty)
                               Container(
                                 alignment: Alignment.center,
                                 child: Text(
@@ -389,7 +460,7 @@ class SearchScreenState extends State<SearchScreen> {
                                       ),
                                 ),
                               ),
-                            if (_isSearching && searchResults.isNotEmpty)
+                            if (!_isLoading && _isSearching && searchResults.isNotEmpty)
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -397,6 +468,7 @@ class SearchScreenState extends State<SearchScreen> {
                                       _buildSearchResultItem(context, result)),
                                 ],
                               ),
+
                             if (!_isSearchFocused && !_isSearching) ...[
                               Text(
                                 "Recent Searches",
@@ -617,6 +689,33 @@ class SearchScreenState extends State<SearchScreen> {
               ],
             ),
           ),
+          if (isLocal)
+            ElevatedButton(
+              onPressed: () {
+                final localPath = result['filePath'] ??
+                    _downloadedBookPaths[result['bookId'].toString()];
+                if (localPath != null) {
+                  context.push('/reader', extra: {
+                    'bookId': result['bookId'].toString(),
+                    'filePath': localPath,
+                    'bookTitle': result['title'],
+                    'fileType': result['fileType'] ?? 'epub',
+                  });
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                "READ",
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.white,
+                    ),
+              ),
+            ),
           if (!isLocal && isFree && downloadUrl != null)
             ElevatedButton(
               onPressed: () => _downloadBook(result),
@@ -648,6 +747,7 @@ class SearchScreenState extends State<SearchScreen> {
                     ),
               ),
             ),
+
         ],
       ),
     );

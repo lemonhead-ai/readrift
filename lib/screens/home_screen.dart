@@ -1,13 +1,14 @@
 import 'package:readrift/security/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 import 'package:readrift/screens/dock.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
 import 'package:readrift/widgets/book_carousel.dart';
 import 'package:go_router/go_router.dart';
+import 'package:readrift/theme.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -223,227 +224,380 @@ class HomeScreenState extends State<HomeScreen> {
                               ],
                             ),
                             const SizedBox(height: 16),
-                            BookCarousel(
-                              title: 'Shelf',
-                              books: const [
-                                BookItem(
-                                  title: '1984',
-                                  author: 'George Orwell',
-                                  imagePath: 'assets/1984.png',
-                                ),
-                                BookItem(
-                                  title: 'Atomic Habits',
-                                  author: 'James Clear',
-                                  imagePath: 'assets/atomic_habits.png',
-                                ),
-                                BookItem(
-                                  title: 'Harry Potter',
-                                  author: 'J.K. Rowling',
-                                  imagePath: 'assets/harry_potter.png',
-                                ),
-                                BookItem(
-                                  title: 'Hooked',
-                                  author: 'Nir Eyal',
-                                  imagePath: 'assets/hooked.png',
-                                ),
-                              ],
-                              onViewAll: () {
-                                context.go('/library');
-                              },
-                            ),
-                            const SizedBox(height: 8),
-                            Text.rich(
-                              TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: "You're currently reading ",
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyLarge
-                                        ?.copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                  TextSpan(
-                                    text: "Hooked",
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyLarge
-                                        ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.orange),
-                                  ),
-                                  TextSpan(
-                                    text: ". You have 📚 ",
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyLarge
-                                        ?.copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                  TextSpan(
-                                    text: "4 books ",
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyLarge
-                                        ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.orange),
-                                  ),
-                                  TextSpan(
-                                    text:
-                                        "in progress. You're free to read for 🕒 ",
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyLarge
-                                        ?.copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                  TextSpan(
-                                    text: _getRemainingReadingTime(),
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyLarge
-                                        ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.orange),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Text(
-                                  "⌛ 5 Hours",
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                                const SizedBox(width: 16),
-                                Text(
-                                  "📈 15% into Hooked",
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 24),
-                            Text(
-                              "Continue reading",
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyLarge
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.color,
-                                  ),
-                            ),
-                            const SizedBox(height: 10),
-                            SizedBox(
-                              height: 225,
-                              child: Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  Positioned(
-                                    left: 0,
-                                    right: 0,
-                                    top: 50,
-                                    bottom: 0,
-                                    child: Container(
-                                      padding: const EdgeInsets.fromLTRB(
-                                          180, 16, 16, 16),
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context).brightness ==
-                                                Brightness.light
-                                            ? Colors.grey[300]
-                                            : Colors.grey[800],
-                                        borderRadius: BorderRadius.circular(34),
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
+                            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                              stream: _authService.getUserLibraryStream(authUser.uid),
+                              builder: (context, librarySnapshot) {
+                                if (librarySnapshot.connectionState == ConnectionState.waiting) {
+                                  return Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(32.0),
+                                      child: CircularProgressIndicator(color: AppColors.accentOrange),
+                                    ),
+                                  );
+                                }
+
+                                final libraryBooks = librarySnapshot.data?.docs
+                                        .map((doc) => doc.data())
+                                        .toList() ??
+                                    [];
+
+                                final carouselBooks = libraryBooks.map((book) {
+                                  return BookItem(
+                                    bookId: book['bookId'].toString(),
+                                    title: book['title'] ?? 'Unknown',
+                                    author: book['author'] ?? 'Unknown',
+                                    imagePath: book['imagePath'] ?? 'assets/default_book.png',
+                                    filePath: book['filePath'] as String?,
+                                    fileType: book['fileType'] ?? 'epub',
+                                    downloaded: book['downloaded'] ?? false,
+                                  );
+                                }).toList();
+
+                                // Find in-progress books
+                                final inProgressBooks = libraryBooks
+                                    .where((book) =>
+                                        (book['progressPercent'] ?? 0.0) > 0.0 &&
+                                        (book['progressPercent'] ?? 0.0) < 0.99)
+                                    .toList();
+
+                                // Choose active book
+                                Map<String, dynamic>? activeBook;
+                                if (inProgressBooks.isNotEmpty) {
+                                  inProgressBooks.sort((a, b) =>
+                                      (b['progressPercent'] ?? 0.0)
+                                          .compareTo(a['progressPercent'] ?? 0.0));
+                                  activeBook = inProgressBooks.first;
+                                } else if (libraryBooks.isNotEmpty) {
+                                  final downloaded = libraryBooks
+                                      .where((b) => b['downloaded'] == true)
+                                      .toList();
+                                  if (downloaded.isNotEmpty) {
+                                    activeBook = downloaded.first;
+                                  }
+                                }
+
+                                final activeBookTitle = activeBook != null
+                                    ? activeBook['title']
+                                    : 'a book';
+                                final activeBookAuthor = activeBook != null
+                                    ? activeBook['author']
+                                    : '';
+                                final activeBookImage = activeBook != null
+                                    ? activeBook['imagePath']
+                                    : 'assets/welcome_illustration.png';
+                                final progressPercent = activeBook != null
+                                    ? ((activeBook['progressPercent'] ?? 0.0) *
+                                            100)
+                                        .round()
+                                    : 0;
+                                final progressValue = activeBook != null
+                                    ? (activeBook['progressPercent'] ?? 0.0)
+                                        .toDouble()
+                                    : 0.0;
+
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    BookCarousel(
+                                      title: 'Shelf',
+                                      books: carouselBooks,
+                                      onViewAll: () {
+                                        context.go('/library');
+                                      },
+                                      onBookTapped: (bookItem) {
+                                        if (bookItem.downloaded &&
+                                            bookItem.filePath != null) {
+                                          context.push('/reader', extra: {
+                                            'bookId': bookItem.bookId,
+                                            'filePath': bookItem.filePath!,
+                                            'bookTitle': bookItem.title,
+                                            'fileType': bookItem.fileType,
+                                          });
+                                        } else {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                                content: Text(
+                                                    "Please re-download this book from the Search tab to read.")),
+                                          );
+                                        }
+                                      },
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text.rich(
+                                      TextSpan(
                                         children: [
-                                          Text(
-                                            "Reading now",
+                                          TextSpan(
+                                            text: activeBook != null
+                                                ? "You're currently reading "
+                                                : "Start your journey by reading ",
                                             style: Theme.of(context)
                                                 .textTheme
-                                                .bodySmall
+                                                .bodyLarge
                                                 ?.copyWith(
-                                                  color: Colors.grey,
-                                                ),
+                                                    fontWeight:
+                                                        FontWeight.bold),
                                           ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            "15%",
+                                          TextSpan(
+                                            text: activeBookTitle,
                                             style: Theme.of(context)
                                                 .textTheme
-                                                .headlineSmall
+                                                .bodyLarge
                                                 ?.copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Theme.of(context)
-                                                      .textTheme
-                                                      .bodyMedium
-                                                      ?.color,
-                                                ),
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.orange),
                                           ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            "- 5 hours left",
+                                          TextSpan(
+                                            text: ". You have 📚 ",
                                             style: Theme.of(context)
                                                 .textTheme
-                                                .bodySmall
+                                                .bodyLarge
                                                 ?.copyWith(
-                                                  color: Colors.grey,
-                                                ),
+                                                    fontWeight:
+                                                        FontWeight.bold),
                                           ),
-                                          const SizedBox(height: 8),
-                                          LinearProgressIndicator(
-                                            borderRadius:
-                                                BorderRadius.circular(20),
-                                            value: 0.15,
-                                            backgroundColor: Colors.grey[300],
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                              Theme.of(context).brightness ==
-                                                      Brightness.light
-                                                  ? Colors.black
-                                                  : Colors.white,
-                                            ),
+                                          TextSpan(
+                                            text:
+                                                "${inProgressBooks.length} books ",
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge
+                                                ?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.orange),
+                                          ),
+                                          TextSpan(
+                                            text:
+                                                "in progress. You're free to read for 🕒 ",
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge
+                                                ?.copyWith(
+                                                    fontWeight:
+                                                        FontWeight.bold),
+                                          ),
+                                          TextSpan(
+                                            text: _getRemainingReadingTime(),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge
+                                                ?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.orange),
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ),
-                                  Positioned(
-                                    left: 10,
-                                    bottom: 10,
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(24),
-                                      child: Container(
-                                        width: 160,
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          "⌛ ${libraryBooks.length} books in Library",
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium,
+                                        ),
+                                        const SizedBox(width: 16),
+                                        if (activeBook != null)
+                                          Text(
+                                            "📈 $progressPercent% into $activeBookTitle",
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium,
+                                          ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 24),
+                                    Text(
+                                      activeBook != null
+                                          ? "Continue reading"
+                                          : "Featured book",
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyLarge
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium
+                                                ?.color,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    GestureDetector(
+                                      onTap: () {
+                                        if (activeBook != null &&
+                                            activeBook['downloaded'] == true) {
+                                          context.push('/reader', extra: {
+                                            'bookId': activeBook['bookId']
+                                                .toString(),
+                                            'filePath':
+                                                activeBook['filePath'] as String,
+                                            'bookTitle':
+                                                activeBook['title'] as String,
+                                            'fileType':
+                                                activeBook['fileType'] ?? 'epub',
+                                          });
+                                        } else {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                                content: Text(
+                                                    "No downloaded book to read. Go to Search to find books.")),
+                                          );
+                                        }
+                                      },
+                                      child: SizedBox(
                                         height: 225,
-                                        decoration: BoxDecoration(
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Theme.of(context)
-                                                          .brightness ==
-                                                      Brightness.light
-                                                  ? Colors.black12
-                                                  : Colors.white12,
-                                              blurRadius: 8,
-                                              offset: const Offset(2, 2),
+                                        child: Stack(
+                                          clipBehavior: Clip.none,
+                                          children: [
+                                            Positioned(
+                                              left: 0,
+                                              right: 0,
+                                              top: 50,
+                                              bottom: 0,
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.fromLTRB(
+                                                        180, 16, 16, 16),
+                                                decoration: BoxDecoration(
+                                                  color: Theme.of(context)
+                                                              .brightness ==
+                                                          Brightness.light
+                                                      ? Colors.grey[300]
+                                                      : Colors.grey[800],
+                                                  borderRadius:
+                                                      BorderRadius.circular(34),
+                                                ),
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    Text(
+                                                      activeBook != null
+                                                          ? "Reading now"
+                                                          : "Tap to select",
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .bodySmall
+                                                          ?.copyWith(
+                                                            color: Colors.grey,
+                                                          ),
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      "$progressPercent%",
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .headlineSmall
+                                                          ?.copyWith(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: Theme.of(
+                                                                    context)
+                                                                .textTheme
+                                                                .bodyMedium
+                                                                ?.color,
+                                                          ),
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      activeBook != null
+                                                          ? activeBookAuthor
+                                                          : "Search tab",
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .bodySmall
+                                                          ?.copyWith(
+                                                            color: Colors.grey,
+                                                          ),
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      maxLines: 1,
+                                                    ),
+                                                    const SizedBox(height: 8),
+                                                    LinearProgressIndicator(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20),
+                                                      value: progressValue,
+                                                      backgroundColor:
+                                                          Colors.grey[400],
+                                                      valueColor:
+                                                          AlwaysStoppedAnimation<
+                                                              Color>(
+                                                        Theme.of(context)
+                                                                    .brightness ==
+                                                                Brightness.light
+                                                            ? Colors.black
+                                                            : Colors.white,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            Positioned(
+                                              left: 10,
+                                              bottom: 10,
+                                              child: ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(24),
+                                                child: Container(
+                                                  width: 160,
+                                                  height: 225,
+                                                  decoration: BoxDecoration(
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: Theme.of(context)
+                                                                    .brightness ==
+                                                                Brightness.light
+                                                            ? Colors.black12
+                                                            : Colors.white12,
+                                                        blurRadius: 8,
+                                                        offset:
+                                                            const Offset(2, 2),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  child: activeBookImage
+                                                          .startsWith('assets/')
+                                                      ? Image.asset(
+                                                          activeBookImage,
+                                                          fit: BoxFit.cover,
+                                                        )
+                                                      : Image.network(
+                                                          activeBookImage,
+                                                          fit: BoxFit.cover,
+                                                          errorBuilder: (context,
+                                                                  error,
+                                                                  stackTrace) =>
+                                                              Container(
+                                                            color:
+                                                                Colors.grey[300],
+                                                            child: const Icon(
+                                                                Icons
+                                                                    .book_rounded,
+                                                                size: 50,
+                                                                color:
+                                                                    Colors.grey),
+                                                          ),
+                                                        ),
+                                                ),
+                                              ),
                                             ),
                                           ],
                                         ),
-                                        child: Image.asset(
-                                          "assets/hooked.png",
-                                          fit: BoxFit.cover,
-                                        ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
+                                  ],
+                                );
+                              },
                             ),
+
                             const SizedBox(height: 120),
                           ],
                         ),
