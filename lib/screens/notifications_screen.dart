@@ -95,15 +95,15 @@ class NotificationsScreenState extends State<NotificationsScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      IconButton(
-                        icon: Icon(
-                          Icons.arrow_back,
-                          color: Theme.of(context).textTheme.bodyMedium?.color,
-                        ),
-                        onPressed: () {
-                          context.go('/profile');
-                        },
-                      ),
+      IconButton(
+        icon: Icon(
+          Icons.arrow_back_ios_new_rounded,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
+        onPressed: () {
+          context.go('/profile');
+        },
+      ),
                       Text(
                         'Notifications',
                         style: Theme.of(context)
@@ -217,15 +217,15 @@ class NotificationsScreenState extends State<NotificationsScreen> {
   IconData _getNotificationIcon(String type) {
     switch (type) {
       case 'book_available':
-        return Icons.book;
+        return Icons.auto_stories_rounded;
       case 'achievement':
-        return Icons.emoji_events;
+        return Icons.emoji_events_rounded;
       case 'bookmark':
-        return Icons.bookmark;
+        return Icons.bookmark_rounded;
       case 'subscription':
-        return Icons.star;
+        return Icons.workspace_premium_rounded;
       default:
-        return Icons.notifications;
+        return Icons.notifications_active_rounded;
     }
   }
 }

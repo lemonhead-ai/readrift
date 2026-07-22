@@ -247,7 +247,7 @@ class ScaffoldWithDock extends StatelessWidget {
     final selectedIndex = _calculateSelectedIndex(context);
     return Scaffold(
       extendBody: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: child,
       bottomNavigationBar: Dock(
         selectedIndex: selectedIndex,

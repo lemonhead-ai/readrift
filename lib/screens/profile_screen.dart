@@ -154,9 +154,11 @@ class ProfileScreenState extends State<ProfileScreen> {
 
                 final textColor = Theme.of(context).colorScheme.onSurface;
 
-                return SafeArea(
-                  bottom: false,
-                  child: SingleChildScrollView(
+                return Scaffold(
+                  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                  body: SafeArea(
+                    bottom: false,
+                    child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(
                         parent: AlwaysScrollableScrollPhysics()),
                     child: Padding(
@@ -169,7 +171,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               IconButton(
                                 icon: Icon(
-                                  Icons.arrow_back,
+                                  Icons.arrow_back_ios_new_rounded,
                                   color: textColor,
                                 ),
                                 onPressed: () {
@@ -182,7 +184,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                               ),
                               IconButton(
                                 icon: const Icon(
-                                  Icons.logout,
+                                  Icons.logout_rounded,
                                   color: Colors.redAccent,
                                 ),
                                 onPressed: _signOut,
@@ -267,7 +269,7 @@ class ProfileScreenState extends State<ProfileScreen> {
 
                           _buildOptionTile(
                             context,
-                            icon: Icons.notifications_outlined,
+                            icon: Icons.notifications_active_rounded,
                             title: "Notifications",
                             hasBadge: true,
                             badgeCount: 2,
@@ -281,13 +283,13 @@ class ProfileScreenState extends State<ProfileScreen> {
                           ),
                           _buildOptionTile(
                             context,
-                            icon: Icons.star_border_rounded,
+                            icon: Icons.workspace_premium_rounded,
                             title: "Subscription plan",
                             onTap: () => context.push('/subscription'),
                           ),
                           _buildOptionTile(
                             context,
-                            icon: Icons.settings_outlined,
+                            icon: Icons.settings_rounded,
                             title: "Account settings",
                             onTap: () => context.push('/account-settings'),
                           ),
@@ -298,15 +300,15 @@ class ProfileScreenState extends State<ProfileScreen> {
                               _buildStatItem(
                                   context,
                                   "$totalBooks books\nyou have",
-                                  Icons.book_outlined),
+                                  Icons.auto_stories_rounded),
                               _buildStatItem(
                                   context,
                                   "$readingHours h\nof reading",
-                                  Icons.timer_outlined),
+                                  Icons.timer_rounded),
                               _buildStatItem(
                                   context,
                                   "$completedBooks books\ndone",
-                                  Icons.check_circle_outline),
+                                  Icons.check_circle_rounded),
                             ],
                           ),
                           const SizedBox(height: 24),
@@ -326,8 +328,8 @@ class ProfileScreenState extends State<ProfileScreen> {
                               BouncyTap(
                                 onTap: () => context.go('/library'),
                                 child: Icon(
-                                  Icons.arrow_forward,
-                                  size: 20,
+                                  Icons.arrow_forward_ios_rounded,
+                                  size: 18,
                                   color: textColor,
                                 ),
                               ),
@@ -375,7 +377,6 @@ class ProfileScreenState extends State<ProfileScreen> {
                                   ),
                           ),
                           const SizedBox(height: 120),
-                        ],
                       ),
                     ),
                   ),

@@ -69,7 +69,7 @@ class ResetPasswordScreenState extends State<ResetPasswordScreen> {
               children: [
                 IconButton(
                   icon: Icon(
-                    Icons.arrow_back,
+                    Icons.arrow_back_ios_new_rounded,
                     color: Theme.of(context).brightness == Brightness.light
                         ? AppColors.lightText
                         : AppColors.darkText,

@@ -132,13 +132,13 @@ class _CustomToastState extends State<CustomToast>
   IconData _getIcon(ToastType type) {
     switch (type) {
       case ToastType.success:
-        return Icons.check_circle_outline;
+        return Icons.check_circle_rounded;
       case ToastType.error:
-        return Icons.error_outline;
+        return Icons.error_rounded;
       case ToastType.warning:
-        return Icons.warning_amber_outlined;
+        return Icons.warning_rounded;
       case ToastType.info:
-        return Icons.info_outline;
+        return Icons.info_rounded;
     }
   }
 

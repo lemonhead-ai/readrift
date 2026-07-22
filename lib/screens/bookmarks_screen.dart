@@ -80,8 +80,8 @@ class BookmarksScreenState extends State<BookmarksScreen> {
                     children: [
                       IconButton(
                         icon: Icon(
-                          Icons.arrow_back,
-                          color: Theme.of(context).textTheme.bodyMedium?.color,
+                          Icons.arrow_back_ios_new_rounded,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                         onPressed: () {
                           context.go('/profile');

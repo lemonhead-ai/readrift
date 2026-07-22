@@ -26,10 +26,10 @@ class _DockState extends State<Dock> with SingleTickerProviderStateMixin {
   double _lastScrollPosition = 0;
 
   final List<_DockItemData> _items = const [
-    _DockItemData(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: 'Home'),
+    _DockItemData(icon: Icons.home_rounded, activeIcon: Icons.home_rounded, label: 'Home'),
     _DockItemData(icon: Icons.search_rounded, activeIcon: Icons.search_rounded, label: 'Search'),
-    _DockItemData(icon: Icons.menu_book_outlined, activeIcon: Icons.menu_book_rounded, label: 'Library'),
-    _DockItemData(icon: Icons.account_circle_outlined, activeIcon: Icons.account_circle_rounded, label: 'Profile'),
+    _DockItemData(icon: Icons.auto_stories_outlined, activeIcon: Icons.auto_stories_rounded, label: 'Library'),
+    _DockItemData(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: 'Profile'),
   ];
 
   @override

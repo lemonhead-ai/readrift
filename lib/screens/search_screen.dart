@@ -293,11 +293,8 @@ class SearchScreenState extends State<SearchScreen> {
                                 context.go('/');
                               },
                               icon: Icon(
-                                Icons.arrow_back,
-                                color: Theme.of(context).brightness ==
-                                        Brightness.light
-                                    ? AppColors.lightText
-                                    : AppColors.darkText,
+                                Icons.arrow_back_ios_new_rounded,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
                             Expanded(

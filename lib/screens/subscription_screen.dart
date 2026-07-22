@@ -20,27 +20,27 @@ class SubscriptionScreenState extends State<SubscriptionScreen> {
     {
       'title': 'Unlimited Access',
       'description': 'Read any book in our library',
-      'icon': Icons.book,
+      'icon': Icons.auto_stories_rounded,
     },
     {
       'title': 'Offline Reading',
       'description': 'Download books for offline access',
-      'icon': Icons.download,
+      'icon': Icons.download_for_offline_rounded,
     },
     {
       'title': 'No Ads',
       'description': 'Enjoy an ad-free reading experience',
-      'icon': Icons.block,
+      'icon': Icons.block_rounded,
     },
     {
       'title': 'Audio Books',
       'description': 'Listen to your favorite books',
-      'icon': Icons.headphones,
+      'icon': Icons.headphones_rounded,
     },
     {
       'title': 'Priority Support',
       'description': 'Get help when you need it',
-      'icon': Icons.support_agent,
+      'icon': Icons.support_agent_rounded,
     },
   ];
 
@@ -78,9 +78,9 @@ class SubscriptionScreenState extends State<SubscriptionScreen> {
                       children: [
                         IconButton(
                           icon: Icon(
-                            Icons.arrow_back,
+                            Icons.arrow_back_ios_new_rounded,
                             color:
-                                Theme.of(context).textTheme.bodyMedium?.color,
+                                Theme.of(context).colorScheme.onSurface,
                           ),
                           onPressed: () {
                             context.go('/profile');

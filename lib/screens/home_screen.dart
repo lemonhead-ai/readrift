@@ -99,37 +99,12 @@ class HomeScreenState extends State<HomeScreen> {
                                 Text(
                                   formattedDate,
                                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                                    color: Theme.of(context).colorScheme.onSurface,
                                     fontFamily: 'SFProRounded',
                                     fontWeight: FontWeight.w600,
                                     fontSize: 18,
                                   ),
                                   textAlign: TextAlign.right,
-                                ),
-                                const SizedBox(width: 12),
-                                BouncyTap(
-                                  onTap: () => context.push('/bookmarks'),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).brightness == Brightness.light
-                                          ? Colors.white
-                                          : const Color(0xFF2C2C2C),
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.08),
-                                          blurRadius: 12,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
-                                    ),
-                                    child: const Icon(
-                                      Icons.bookmark_outline_rounded,
-                                      color: AppColors.accentOrange,
-                                      size: 22,
-                                    ),
-                                  ),
                                 ),
                               ],
                             ),

@@ -146,11 +146,8 @@ class LibraryScreenState extends State<LibraryScreen> {
                               children: [
                                 IconButton(
                                   icon: Icon(
-                                    Icons.arrow_back,
-                                    color: Theme.of(context).brightness ==
-                                            Brightness.light
-                                        ? AppColors.lightText
-                                        : AppColors.darkText,
+                                    Icons.arrow_back_ios_new_rounded,
+                                    color: Theme.of(context).colorScheme.onSurface,
                                   ),
                                   onPressed: () {
                                     context.go('/');
@@ -159,13 +156,10 @@ class LibraryScreenState extends State<LibraryScreen> {
                                 Row(
                                   children: [
                                     IconButton(
-                                      icon: Icon(
-                                        Icons.bookmark_border,
-                                        color: Theme.of(context).brightness ==
-                                                Brightness.light
-                                            ? AppColors.lightText
-                                            : AppColors.darkText,
-                                      ),
+                                       icon: Icon(
+                                         Icons.bookmark_border_rounded,
+                                         color: Theme.of(context).colorScheme.onSurface,
+                                       ),
                                       onPressed: () {
                                         context.go('/bookmarks');
                                       },
