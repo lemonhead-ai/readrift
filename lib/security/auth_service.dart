@@ -134,17 +134,74 @@ class AuthService {
     await _auth.signOut();
   }
 
-  Future<void> addBookToLibrary(String uid, Book book) async {
+  // Stream user's library from Firestore (Local implementation)
+  Stream<QuerySnapshot<Map<String, dynamic>>> getUserLibraryStream(String uid) {
+    return _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('library')
+        .snapshots();
+  }
+
+  // Add or update a book in user's Firestore library (Local implementation)
+  Future<void> addBookToLibrary(
+      String uid, Map<String, dynamic> bookMetadata) async {
+    final bookId = bookMetadata['bookId'] as String;
+    await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('library')
+        .doc(bookId)
+        .set(bookMetadata, SetOptions(merge: true));
+  }
+
+  // Update reading progress (Local implementation)
+  Future<void> updateReadingProgress(
+    String uid,
+    String bookId,
+    double progressPercent,
+    String currentPosition,
+  ) async {
+    final isCompleted = progressPercent >= 0.99; // 99% or more is complete
+    await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('library')
+        .doc(bookId)
+        .update({
+      'progressPercent': progressPercent,
+      'currentPosition': currentPosition,
+      'isCompleted': isCompleted,
+    });
+  }
+
+  // Update book download status in Firestore (Local implementation)
+  Future<void> updateDownloadStatus(
+      String uid, String bookId, bool downloaded,
+      {String? filePath}) async {
+    await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('library')
+        .doc(bookId)
+        .update({
+      'downloaded': downloaded,
+      if (filePath != null) 'filePath': filePath,
+    });
+  }
+
+  // --- Remote Branch (origin/master) Implementations ---
+  Future<void> addBookToLibraryRemote(String uid, Book book) async {
     await _firestore.collection('users').doc(uid).collection('books').doc(book.id).set(book.toFirestore());
   }
 
-  Stream<List<Book>> getUserLibraryStream(String uid) {
+  Stream<List<Book>> getUserLibraryStreamRemote(String uid) {
     return _firestore.collection('users').doc(uid).collection('books').snapshots().map((snapshot) {
       return snapshot.docs.map((doc) => Book.fromFirestore(doc)).toList();
     });
   }
 
-  Future<void> updateBookProgress(String uid, String bookId, double progress, bool isCompleted) async {
+  Future<void> updateBookProgressRemote(String uid, String bookId, double progress, bool isCompleted) async {
     await _firestore.collection('users').doc(uid).collection('books').doc(bookId).update({
       'progress': progress,
       'isCompleted': isCompleted,
@@ -160,3 +217,4 @@ class AuthService {
     return null;
   }
 }
+

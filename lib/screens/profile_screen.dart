@@ -86,7 +86,7 @@ class ProfileScreenState extends State<ProfileScreen> {
             final photoUrl = authUser.photoURL;
 
             return StreamBuilder<List<Book>>(
-              stream: _authService.getUserLibraryStream(authUser.uid),
+              stream: _authService.getUserLibraryStreamRemote(authUser.uid),
               builder: (context, librarySnapshot) {
                 final books = librarySnapshot.data ?? [];
                 final totalBooks = books.length;

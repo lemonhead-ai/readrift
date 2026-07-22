@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:readrift/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:readrift/models/book.dart';
-import 'package:readrift/screens/book_reader_screen.dart';  // Import if adding
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
@@ -18,6 +18,57 @@ class LibraryScreen extends StatefulWidget {
 
 class LibraryScreenState extends State<LibraryScreen> {
   final AuthService _authService = AuthService();
+
+  Future<void> _importLocalBook() async {
+    final user = _authService.currentUser;
+    if (user == null) return;
+
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['epub', 'pdf'],
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final filePath = result.files.single.path!;
+        final file = File(filePath);
+        final fileName = result.files.single.name;
+
+        final extension = fileName.split('.').last.toLowerCase();
+        final bookId = "local_${DateTime.now().millisecondsSinceEpoch}";
+        final title = fileName.replaceAll('.$extension', '');
+
+        final dir = await getApplicationDocumentsDirectory();
+        final localFile = File("${dir.path}/$bookId.$extension");
+        await file.copy(localFile.path);
+
+        final bookMetadata = {
+          "bookId": bookId,
+          "title": title,
+          "author": "Local Import",
+          "imagePath": "assets/default_book.png",
+          "downloaded": true,
+          "filePath": localFile.path,
+          "fileType": extension,
+          "progressPercent": 0.0,
+          "currentPosition": "",
+          "isCompleted": false,
+        };
+
+        await _authService.addBookToLibrary(user.uid, bookMetadata);
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Imported '$title' successfully!")),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to import book: $e")),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,173 +112,165 @@ class LibraryScreenState extends State<LibraryScreen> {
             }
 
             final photoUrl = authUser.photoURL;
-
             final screenWidth = MediaQuery.of(context).size.width;
             const bookCardWidth = 120.0;
             final crossAxisCount =
-            (screenWidth / bookCardWidth).clamp(1, 4).floor();
+                (screenWidth / bookCardWidth).clamp(1, 4).floor();
 
-            return StreamBuilder<List<Book>>(
+            return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
               stream: _authService.getUserLibraryStream(authUser.uid),
               builder: (context, librarySnapshot) {
                 if (librarySnapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Scaffold(
+                    body: Center(child: CircularProgressIndicator()),
+                  );
                 }
-                final books = librarySnapshot.data ?? [];
-                return SafeArea(
-                  bottom: false,
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              IconButton(
-                                icon: Icon(
-                                  Icons.arrow_back,
-                                  color: Theme.of(context).brightness ==
-                                      Brightness.light
-                                      ? AppColors.lightText
-                                      : AppColors.darkText,
-                                ),
-                                onPressed: () {
-                                  context.go('/');
-                                },
-                              ),
-                              Row(
-                                children: [
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.bookmark_border,
-                                      color: Theme.of(context).brightness ==
-                                          Brightness.light
-                                          ? AppColors.lightText
-                                          : AppColors.darkText,
-                                    ),
-                                    onPressed: () {},
-                                  ),
-                                  IconButton(
-                                    onPressed: () {
-                                      context.go('/profile');
-                                    },
-                                    icon: Container(
-                                      width: 40,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.grey[300],
-                                      ),
-                                      child: photoUrl != null
-                                          ? ClipOval(
-                                        child: Image.network(
-                                          photoUrl,
-                                          fit: BoxFit.cover,
-                                          width: 40,
-                                          height: 40,
-                                          errorBuilder: (context, error,
-                                              stackTrace) {
-                                            return const Icon(
-                                              Icons.person,
-                                              size: 24,
-                                              color: Colors.grey,
-                                            );
-                                          },
-                                        ),
-                                      )
-                                          : const Icon(
-                                        Icons.person,
-                                        size: 24,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "My Library",
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineMedium
-                                    ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).brightness ==
-                                      Brightness.light
-                                      ? AppColors.lightText
-                                      : AppColors.darkText,
-                                ),
-                              ),
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.book,
-                                    size: 16,
+
+                final libraryBooks = librarySnapshot.data?.docs
+                        .map((doc) => doc.data())
+                        .toList() ??
+                    [];
+
+                return Scaffold(
+                  body: SafeArea(
+                    bottom: false,
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.arrow_back,
                                     color: Theme.of(context).brightness ==
-                                        Brightness.light
+                                            Brightness.light
+                                        ? AppColors.lightText
+                                        : AppColors.darkText,
+                                  ),
+                                  onPressed: () {
+                                    context.go('/');
+                                  },
+                                ),
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(
+                                        Icons.bookmark_border,
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.light
+                                            ? AppColors.lightText
+                                            : AppColors.darkText,
+                                      ),
+                                      onPressed: () {
+                                        context.go('/bookmarks');
+                                      },
+                                    ),
+                                    IconButton(
+                                      onPressed: () {
+                                        context.go('/profile');
+                                      },
+                                      icon: Container(
+                                        width: 40,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.grey[300],
+                                        ),
+                                        child: photoUrl != null
+                                            ? ClipOval(
+                                                child: Image.network(
+                                                  photoUrl,
+                                                  fit: BoxFit.cover,
+                                                  width: 40,
+                                                  height: 40,
+                                                ),
+                                              )
+                                            : Icon(
+                                                Icons.person_rounded,
+                                                color: Colors.grey[600],
+                                              ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Library",
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .displaySmall
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.light
+                                            ? AppColors.lightText
+                                            : AppColors.darkText,
+                                      ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.add_rounded, size: 28),
+                                  onPressed: _importLocalBook,
+                                  color: AppColors.accentOrange,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "You have 📚 ${libraryBooks.length} books in your library",
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w400,
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.light
                                         ? AppColors.lightSecondaryText
                                         : AppColors.darkSecondaryText,
                                   ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    "${books.length} books",
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(
-                                      color: Theme.of(context)
-                                          .brightness ==
-                                          Brightness.light
-                                          ? AppColors.lightSecondaryText
-                                          : AppColors.darkSecondaryText,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          GridView.builder(
-                            physics: const NeverScrollableScrollPhysics(),
-                            shrinkWrap: true,
-                            gridDelegate:
-                            SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: crossAxisCount,
-                              crossAxisSpacing: 8.0,
-                              mainAxisSpacing: 8.0,
-                              childAspectRatio: 0.6,
                             ),
-                            itemCount: books.length,
-                            itemBuilder: (context, index) {
-                              final book = books[index];
-                              return GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => BookReaderScreen(book: book),
+                            const SizedBox(height: 24),
+                            libraryBooks.isEmpty
+                                ? Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(48.0),
+                                      child: Text(
+                                        "Your library is empty. Import files or search online!",
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(color: Colors.grey),
+                                        textAlign: TextAlign.center,
+                                      ),
                                     ),
-                                  );
-                                },
-                                child: _buildBookCard(
-                                  context,
-                                  book.title,
-                                  book.author,
-                                  book.coverUrl ?? '',
-                                  book.isCompleted,
-                                ),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 120),
-                        ],
+                                  )
+                                : GridView.builder(
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: crossAxisCount,
+                                      childAspectRatio: 0.65,
+                                      crossAxisSpacing: 16,
+                                      mainAxisSpacing: 24,
+                                    ),
+                                    itemCount: libraryBooks.length,
+                                    itemBuilder: (context, index) {
+                                      final book = libraryBooks[index];
+                                      return _buildBookCard(context, book);
+                                    },
+                                  ),
+                            const SizedBox(height: 120),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -240,56 +283,101 @@ class LibraryScreenState extends State<LibraryScreen> {
     );
   }
 
-  Widget _buildBookCard(BuildContext context, String title, String author,
-      String imageUrl, bool isCompleted) {
-    return Stack(
-      children: [
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: imageUrl.isNotEmpty
-                ? CachedNetworkImage(
-              imageUrl: imageUrl,
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-              placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-              errorWidget: (context, url, error) => const Icon(Icons.book),
-            )
-                : const Icon(Icons.book, size: 120),
-          ),
+  Widget _buildBookCard(BuildContext context, Map<String, dynamic> book) {
+    final title = book['title'] ?? 'Unknown';
+    final imagePath = book['imagePath'] ?? 'assets/welcome_illustration.png';
+    final isCompleted = book['isCompleted'] ?? false;
+    final downloaded = book['downloaded'] ?? false;
+
+    Widget image;
+    if (imagePath.startsWith('assets/')) {
+      image = Image.asset(imagePath,
+          fit: BoxFit.cover, width: double.infinity, height: double.infinity);
+    } else {
+      image = Image.network(
+        imagePath,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (context, error, stackTrace) => Container(
+          color: Colors.grey[300],
+          child: const Icon(Icons.book_rounded, size: 40, color: Colors.grey),
         ),
-        if (isCompleted)
-          Positioned(
-            bottom: 8,
-            right: 8,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.green,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.check,
-                    size: 16,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    "Done",
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.white,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
+      );
+    }
+
+    return GestureDetector(
+      onTap: () {
+        if (downloaded && book['filePath'] != null) {
+          context.push('/reader', extra: {
+            'bookId': book['bookId'].toString(),
+            'filePath': book['filePath'] as String,
+            'bookTitle': title,
+            'fileType': book['fileType'] ?? 'epub',
+          });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text(
+                    "Please re-download this book from the Search tab to read.")),
+          );
+        }
+      },
+      child: Stack(
+        children: [
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: image,
             ),
           ),
-      ],
+          if (isCompleted)
+            Positioned(
+              bottom: 8,
+              right: 8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.green,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.check,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      "Done",
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          if (!downloaded)
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                color: Colors.black.withAlpha((0.6 * 255).toInt()),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.cloud_download_outlined,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

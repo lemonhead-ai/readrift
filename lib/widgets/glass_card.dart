@@ -29,7 +29,6 @@ class _GlassCardState extends State<GlassCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
-  bool _isHovered = false;
 
   @override
   void initState() {
@@ -56,9 +55,6 @@ class _GlassCardState extends State<GlassCard>
 
   void _handleHover(bool isHovered) {
     if (!widget.animateOnHover) return;
-    setState(() {
-      _isHovered = isHovered;
-    });
     if (isHovered) {
       _controller.forward();
     } else {
