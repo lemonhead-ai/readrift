@@ -10,6 +10,10 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:readrift/widgets/skeleton_loader.dart';
+import 'package:readrift/widgets/custom_toast.dart';
+import 'package:readrift/widgets/bouncy_tap.dart';
+
+
 
 
 
@@ -496,7 +500,7 @@ class SearchScreenState extends State<SearchScreen> {
                               _buildCategoryChip(context, "History", Icons.history_edu_rounded),
                               _buildCategoryChip(context, "Mystery", Icons.search_rounded),
                               _buildCategoryChip(context, "Philosophy", Icons.psychology_rounded),
-                              _buildCategoryChip(context, "Poetry", Icons.feather_rounded),
+                              _buildCategoryChip(context, "Poetry", Icons.edit_note_rounded),
                             ],
                           ),
                           const SizedBox(height: 24),

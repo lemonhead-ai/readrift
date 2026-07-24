@@ -189,6 +189,12 @@ class _ReaderScreenState extends State<ReaderScreen> {
     });
   }
 
+  void _toggleControlOverlay() {
+    setState(() {
+      _isControlOverlayVisible = !_isControlOverlayVisible;
+    });
+  }
+
   @override
   void dispose() {
     _epubReaderController?.dispose();

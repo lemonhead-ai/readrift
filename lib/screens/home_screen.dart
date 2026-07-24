@@ -7,6 +7,8 @@ import 'package:readrift/widgets/book_carousel.dart';
 import 'package:go_router/go_router.dart';
 import 'package:readrift/theme.dart';
 import 'package:readrift/widgets/skeleton_loader.dart';
+import 'package:readrift/widgets/bouncy_tap.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
