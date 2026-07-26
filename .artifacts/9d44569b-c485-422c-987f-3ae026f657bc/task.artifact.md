@@ -1,8 +1,8 @@
-# Task List - ReadRift 5-Star Polish
+# Task List - Streak Polish & AI Refinement
 
-- [x] Onboarding Experience (`welcome_screen.dart`)
-- [x] Table of Contents in Reader (`reader_screen.dart`)
-- [x] Gamification & Polish on Home Screen (`home_screen.dart`)
-- [x] Category Discovery in Search (`search_screen.dart`)
-- [x] Skeleton Loaders (`widgets/skeleton_loader.dart`)
+- [x] Add dependencies (`share_plus`, `screenshot`) to `pubspec.yaml`
+- [x] Implement Streak logic in `AuthService`
+- [x] Create `UniverseShareCard` widget
+- [x] Refine AI prompts in `AIService`
+- [x] Integrate Streak & Sharing in `HomeScreen`
 - [x] Verification & Final Walkthrough

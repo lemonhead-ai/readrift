@@ -216,5 +216,98 @@ class AuthService {
     }
     return null;
   }
+
+  // --- Annotation System (Highlights & Notes) ---
+  Future<void> addAnnotation(String uid, String bookId, Map<String, dynamic> annotation) async {
+    await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('library')
+        .doc(bookId)
+        .collection('annotations')
+        .add({
+          ...annotation,
+          'uid': uid,
+          'bookId': bookId,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> getAnnotationsStream(String uid, String bookId) {
+    return _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('library')
+        .doc(bookId)
+        .collection('annotations')
+        .orderBy('createdAt', descending: true)
+        .snapshots();
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> getAllAnnotationsStream(String uid) {
+    return _firestore
+        .collectionGroup('annotations')
+        .where('uid', isEqualTo: uid) // I need to make sure UID is stored in the annotation doc for collectionGroup queries to be safe and filtered
+        .orderBy('createdAt', descending: true)
+        .snapshots();
+  }
+
+  Future<void> deleteAnnotation(String uid, String bookId, String annotationId) async {
+    await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('library')
+        .doc(bookId)
+        .collection('annotations')
+        .doc(annotationId)
+        .delete();
+  }
+
+  // --- Streak & Engagement System ---
+  Future<void> recordReadingSession(String uid, {int minutes = 1}) async {
+    final userRef = _firestore.collection('users').doc(uid);
+    
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(userRef);
+      if (!snapshot.exists) return;
+
+      final data = snapshot.data()!;
+      final lastRead = data['lastReadDate'] != null 
+          ? (data['lastReadDate'] as Timestamp).toDate() 
+          : null;
+      int currentStreak = data['streakCount'] ?? 0;
+      int minutesToday = data['minutesReadToday'] ?? 0;
+      
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+
+      if (lastRead == null) {
+        currentStreak = 1;
+        minutesToday = minutes;
+      } else {
+        final lastReadDate = DateTime(lastRead.year, lastRead.month, lastRead.day);
+        final difference = today.difference(lastReadDate).inDays;
+
+        if (difference == 1) {
+          // Consecutive day
+          currentStreak++;
+          minutesToday = minutes;
+        } else if (difference > 1) {
+          // Streak broken
+          currentStreak = 1;
+          minutesToday = minutes;
+        } else {
+          // Same day
+          minutesToday += minutes;
+        }
+      }
+
+      transaction.update(userRef, {
+        'lastReadDate': FieldValue.serverTimestamp(),
+        'streakCount': currentStreak,
+        'minutesReadToday': minutesToday,
+      });
+    });
+  }
 }
 

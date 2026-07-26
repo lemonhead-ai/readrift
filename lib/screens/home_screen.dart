@@ -8,6 +8,11 @@ import 'package:go_router/go_router.dart';
 import 'package:readrift/theme.dart';
 import 'package:readrift/widgets/skeleton_loader.dart';
 import 'package:readrift/widgets/bouncy_tap.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:readrift/widgets/universe_share_card.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -19,11 +24,32 @@ class HomeScreen extends StatefulWidget {
 
 class HomeScreenState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
+  final ScreenshotController _screenshotController = ScreenshotController();
 
-  Widget _buildDailyGoalWidget(BuildContext context) {
+  Future<void> _shareUniverseCard(String username, int streak, String bookTitle, int minutes) async {
+    try {
+      final image = await _screenshotController.captureFromWidget(
+        UniverseShareCard(
+          username: username,
+          streak: streak,
+          bookTitle: bookTitle,
+          minutesRead: minutes,
+        ),
+      );
+
+      final directory = await getTemporaryDirectory();
+      final imagePath = await File('${directory.path}/universe_streak.png').create();
+      await imagePath.writeAsBytes(image);
+
+      await Share.shareXFiles([XFile(imagePath.path)], text: 'My reading universe is expanding! ✨ #ReadRift');
+    } catch (e) {
+      debugPrint("Sharing failed: $e");
+    }
+  }
+
+  Widget _buildDailyGoalWidget(BuildContext context, {required int streak, required int minutes, required String username, required String activeBook}) {
     const double goalMinutes = 20.0;
-    const double currentMinutes = 12.0; // Simulated progress
-    const int streak = 4;
+    final double currentMinutes = minutes.toDouble();
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -46,7 +72,7 @@ class HomeScreenState extends State<HomeScreen> {
                 width: 60,
                 height: 60,
                 child: CircularProgressIndicator(
-                  value: currentMinutes / goalMinutes,
+                  value: (currentMinutes / goalMinutes).clamp(0.0, 1.0),
                   strokeWidth: 6,
                   backgroundColor: Colors.grey.withAlpha(50),
                   valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accentOrange),
@@ -72,26 +98,35 @@ class HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.accentOrange.withAlpha(30),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.local_fire_department_rounded, color: AppColors.accentOrange, size: 18),
-                const SizedBox(width: 4),
-                Text(
-                  "$streak",
-                  style: const TextStyle(
-                    color: AppColors.accentOrange,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+          Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.accentOrange.withAlpha(30),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ],
-            ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.local_fire_department_rounded, color: AppColors.accentOrange, size: 18),
+                    const SizedBox(width: 4),
+                    Text(
+                      "$streak",
+                      style: const TextStyle(
+                        color: AppColors.accentOrange,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              BouncyTap(
+                onTap: () => _shareUniverseCard(username, streak, activeBook, minutes),
+                child: const Icon(Icons.share_rounded, color: Colors.grey, size: 20),
+              ),
+            ],
           ),
         ],
       ),
@@ -146,6 +181,8 @@ class HomeScreenState extends State<HomeScreen> {
             final userData = snapshot.data!.data()!;
             final username = userData['username'] ?? "User";
             final photoUrl = authUser.photoURL;
+            final streakCount = userData['streakCount'] ?? 0;
+            final minutesToday = userData['minutesReadToday'] ?? 0;
 
             final today = DateTime.now();
             final formattedDate = DateFormat('MMMM, d\n yyyy').format(today);
@@ -245,8 +282,6 @@ class HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        _buildDailyGoalWidget(context),
-                        const SizedBox(height: 16),
                         StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                           stream: _authService.getUserLibraryStream(authUser.uid),
                           builder: (context, librarySnapshot) {
@@ -330,6 +365,14 @@ class HomeScreenState extends State<HomeScreen> {
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                _buildDailyGoalWidget(
+                                  context,
+                                  streak: streakCount,
+                                  minutes: minutesToday,
+                                  username: username,
+                                  activeBook: activeBookTitle,
+                                ),
+                                const SizedBox(height: 16),
                                 BookCarousel(
                                   title: 'Shelf',
                                   books: carouselBooks,
@@ -356,8 +399,6 @@ class HomeScreenState extends State<HomeScreen> {
                                   },
                                 ),
                                 const SizedBox(height: 16),
-                        _buildDailyGoalWidget(context),
-                        const SizedBox(height: 16),
                                 Text.rich(
                                   TextSpan(
                                     children: [

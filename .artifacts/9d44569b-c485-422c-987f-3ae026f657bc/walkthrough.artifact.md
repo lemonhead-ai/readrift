@@ -1,37 +1,35 @@
-# ReadRift 5-Star Polish Walkthrough
+# ReadRift Streak Polish & AI Refinement Walkthrough
 
-I have implemented several key enhancements to elevate ReadRift to a production-ready, high-quality experience.
+The ReadRift universe is now more social, persistent, and poetic.
 
-## Changes Made
+## Key Enhancements
 
-### 1. Immersive Onboarding
-- **[Welcome Screen](file:///C:/Projects/readrift/lib/screens/welcome_screen.dart)**: Replaced the static welcome screen with a dynamic `PageView` that introduces the app's core value propositions:
-    - Starting the story.
-    - Importing local files for offline reading.
-    - Customizing the reading experience.
-- Added smooth indicator dots and a haptic-enabled "Next" button flow.
+### 1. Real Reading Streaks & Goals
+- **Persistence**: Replaced mock streak data with a robust Firestore-backed system in `AuthService`.
+- **Engagement**: Added `recordReadingSession` which tracks daily minutes read and maintains a streak counter with automatic resets if a day is missed.
+- **Dynamic Home**: The `DailyGoalWidget` on the Home screen now reflects the user's real-time progress and streak.
 
-### 2. Table of Contents (EPUB)
-- **[Reader Screen](file:///C:/Projects/readrift/lib/screens/reader_screen.dart)**: The menu button now opens a sleek `ModalBottomSheet` containing the book's Table of Contents.
-- Users can jump directly to any chapter, improving navigation significantly for long books.
+### 2. Universe Share Cards
+- **[Universe Share Card](file:///C:/Projects/readrift/lib/widgets/universe_share_card.dart)**: Created a beautiful, Glassmorphism-styled card that captures the user's reading persona (e.g., "Nebula Reader").
+- **Social Sharing**: Integrated `screenshot` and `share_plus` so users can export these cards as high-quality images to share their progress with the world.
 
-### 3. Gamification & Daily Goals
-- **[Home Screen](file:///C:/Projects/readrift/lib/screens/home_screen.dart)**: Added a "Daily Goal" widget that tracks reading minutes and maintains a streak counter.
-- This creates a psychological "hook" for users to return every day.
+### 3. Poetic AI Refinement
+- **[Universal Librarian](file:///C:/Projects/readrift/lib/services/ai_service.dart)**: Refined the Gemini AI prompts. The AI now speaks in the voice of a "Universal Librarian," providing summaries that feel like "ancient star-maps being revealed."
+- **Immersive Feedback**: Updated error messages to maintain the theme (e.g., "The connection to the character's star-thread was lost").
 
-### 4. Discovery via Categories
-- **[Search Screen](file:///C:/Projects/readrift/lib/screens/search_screen.dart)**: Added category discovery chips (Fiction, Science, Mystery, etc.) when the search bar is empty.
-- This allows users to find content with a single tap instead of typing.
+---
 
-### 5. Premium Shimmer Skeletons
-- **[Skeleton Loader](file:///C:/Projects/readrift/lib/widgets/skeleton_loader.dart)**: Introduced a custom shimmer-based loading system.
-- Replaced all basic `CircularProgressIndicators` on the Home and Search screens with shimmer skeletons that match the content structure, making the app feel significantly faster and more polished.
-
-## Verification Results
-
-- **Build**: The app compiles successfully.
-- **UI Consistency**: All new widgets respect the user's Dark/Light mode settings.
-- **Haptics**: `BouncyTap` haptics provide tactile feedback throughout the new screens.
+## Technical Details
 
 > [!TIP]
-> To further improve the 5-star rating, consider adding a "Review Prompt" after a user completes their first book!
+> Users can trigger a share card by tapping the share icon in the **Daily Goal** section on the Home Screen.
+
+> [!IMPORTANT]
+> The streak logic includes a daily reset. If a user doesn't record a reading session for a full calendar day, their streak will return to 1 upon their next session.
+
+---
+
+## Verification Results
+- **Streak Logic**: Verified that `minutesReadToday` and `streakCount` update correctly in Firestore during reading sessions.
+- **Sharing**: Verified that the share sheet opens with the correctly generated `universe_streak.png` image.
+- **AI Tone**: Confirmed the new poetic summaries via the "AI Insight" overlay in the reader.

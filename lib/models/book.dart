@@ -10,6 +10,8 @@ class Book {
   final String? downloadUrl;  // Link to PDF if free
   final double progress;  // e.g., 0.15 for 15%
   final String? iaId;  // Internet Archive ID for borrowing/reading
+  final List<String> tags;
+  final DateTime? lastSyncedAt;
 
   Book({
     required this.id,
@@ -21,6 +23,8 @@ class Book {
     this.downloadUrl,
     this.progress = 0.0,
     this.iaId,
+    this.tags = const [],
+    this.lastSyncedAt,
   });
 
   factory Book.fromJson(Map<String, dynamic> json) {
@@ -39,6 +43,7 @@ class Book {
       isFree: isFree,
       iaId: iaId,
       downloadUrl: isFree && iaId != null ? 'https://archive.org/download/$iaId/$iaId.pdf' : null,
+      tags: (doc['subject'] as List?)?.map((e) => e.toString()).take(3).toList() ?? [],
     );
   }
 
@@ -52,8 +57,12 @@ class Book {
       isCompleted: data['isCompleted'] ?? false,
       isFree: data['isFree'] ?? false,
       downloadUrl: data['downloadUrl'],
-      progress: data['progress'] ?? 0.0,
+      progress: (data['progress'] ?? 0.0).toDouble(),
       iaId: data['iaId'],
+      tags: List<String>.from(data['tags'] ?? []),
+      lastSyncedAt: data['lastSyncedAt'] != null 
+        ? (data['lastSyncedAt'] as Timestamp).toDate() 
+        : null,
     );
   }
 
@@ -67,6 +76,8 @@ class Book {
       'downloadUrl': downloadUrl,
       'progress': progress,
       'iaId': iaId,
+      'tags': tags,
+      'lastSyncedAt': FieldValue.serverTimestamp(),
     };
   }
 }

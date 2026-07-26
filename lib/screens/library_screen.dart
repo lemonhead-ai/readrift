@@ -13,6 +13,8 @@ import 'package:readrift/widgets/custom_toast.dart';
 
 
 
+import 'package:firebase_storage/firebase_storage.dart';
+
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
 
@@ -42,9 +44,20 @@ class LibraryScreenState extends State<LibraryScreen> {
         final bookId = "local_${DateTime.now().millisecondsSinceEpoch}";
         final title = fileName.replaceAll('.$extension', '');
 
+        // 1. Copy locally for instant access
         final dir = await getApplicationDocumentsDirectory();
         final localFile = File("${dir.path}/$bookId.$extension");
         await file.copy(localFile.path);
+
+        // 2. Upload to Firebase Storage for Cloud Sync
+        ToastService.showInfo(context, "Syncing '$title' to your universe...");
+        final storageRef = FirebaseStorage.instance
+            .ref()
+            .child('users/${user.uid}/books/$bookId.$extension');
+        
+        final uploadTask = storageRef.putFile(localFile);
+        final snapshot = await uploadTask.whenComplete(() => {});
+        final downloadUrl = await snapshot.ref.getDownloadURL();
 
         final bookMetadata = {
           "bookId": bookId,
@@ -53,16 +66,18 @@ class LibraryScreenState extends State<LibraryScreen> {
           "imagePath": "assets/default_book.png",
           "downloaded": true,
           "filePath": localFile.path,
+          "downloadUrl": downloadUrl, // Store cloud link
           "fileType": extension,
           "progressPercent": 0.0,
           "currentPosition": "",
           "isCompleted": false,
+          "lastSyncedAt": FieldValue.serverTimestamp(),
         };
 
         await _authService.addBookToLibrary(user.uid, bookMetadata);
 
         if (!mounted) return;
-        ToastService.showSuccess(context, "Imported '$title' successfully!");
+        ToastService.showSuccess(context, "Imported and Synced '$title' successfully!");
       }
     } catch (e) {
       if (!mounted) return;

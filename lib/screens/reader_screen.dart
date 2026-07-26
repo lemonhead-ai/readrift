@@ -8,7 +8,9 @@ import 'package:readrift/security/auth_service.dart';
 import 'package:readrift/theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:readrift/widgets/custom_toast.dart';
-
+import 'package:readrift/services/ai_service.dart';
+import 'package:readrift/services/audio_service.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class ReaderScreen extends StatefulWidget {
   final String bookId;
@@ -31,6 +33,9 @@ class ReaderScreen extends StatefulWidget {
 class _ReaderScreenState extends State<ReaderScreen> {
   EpubController? _epubReaderController;
   final AuthService _authService = AuthService();
+  final AIService _aiService = AIService();
+  final AudioService _audioService = AudioService();
+  
   bool _isControlOverlayVisible = true;
   bool _isCompleted = false;
   int _totalPages = 0;
@@ -38,11 +43,141 @@ class _ReaderScreenState extends State<ReaderScreen> {
   double _fontSize = 18.0;
   Color _themeBgColor = AppColors.warmWhite;
   int _totalChapters = 1;
+  
+  // Advanced State
+  DateTime? _startTime;
+  int _pagesReadThisSession = 0;
+  String _timeToFinish = "Calculating...";
+  bool _isAISummarizing = false;
+  String? _aiSummary;
 
   @override
   void initState() {
     super.initState();
+    _startTime = DateTime.now();
     _initializeReader();
+  }
+
+  void _calculateReadingVelocity(int currentPage) {
+    if (_startTime == null || currentPage <= 0) return;
+    
+    final elapsedMinutes = DateTime.now().difference(_startTime!).inMinutes;
+    if (elapsedMinutes < 1) {
+      setState(() {
+        _timeToFinish = "Calculating...";
+      });
+      return;
+    }
+
+    final pagesRead = currentPage - _currentPage;
+    if (pagesRead > 0) {
+      _pagesReadThisSession += pagesRead;
+    }
+
+    final pagesPerMinute = _pagesReadThisSession / elapsedMinutes;
+    if (pagesPerMinute > 0) {
+      final pagesRemaining = _totalPages - currentPage;
+      final minutesRemaining = pagesRemaining / pagesPerMinute;
+      
+      setState(() {
+        if (minutesRemaining > 60) {
+          _timeToFinish = "${(minutesRemaining / 60).toStringAsFixed(1)} hrs left";
+        } else {
+          _timeToFinish = "${minutesRemaining.toInt()} mins left";
+        }
+      });
+    }
+  }
+
+  Future<void> _getAISummary() async {
+    setState(() {
+      _isAISummarizing = true;
+      _aiSummary = null;
+    });
+
+    try {
+      // In a real scenario, we'd extract text from the current page/chapter.
+      // For now, we'll send a placeholder indicating the context.
+      final summary = await _aiService.summarizeContent(
+        "Reader is currently on chapter/page $_currentPage of '${widget.bookTitle}'."
+      );
+      
+      setState(() {
+        _aiSummary = summary;
+        _isAISummarizing = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isAISummarizing = false;
+      });
+      ToastService.showError(context, "AI Summary failed.");
+    }
+  }
+
+  void _showAudioMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: _themeBgColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text("Audio Universe", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildAudioOption("Rain", Icons.umbrella_rounded),
+                _buildAudioOption("Cafe", Icons.coffee_rounded),
+                _buildAudioOption("Focus", Icons.graphic_eq_rounded),
+                _buildAudioOption("Off", Icons.volume_off_rounded),
+              ],
+            ),
+            const Divider(height: 40),
+            ListTile(
+              leading: const Icon(Icons.record_voice_over_rounded, color: AppColors.accentOrange),
+              title: const Text("Audiobook Mode (TTS)"),
+              subtitle: const Text("Listen to the current page"),
+              trailing: Switch(
+                value: _audioService.isSpeaking,
+                onChanged: (val) {
+                  if (val) {
+                    _audioService.speak("Reading ${widget.bookTitle}. This is a preview of the text to speech functionality.");
+                  } else {
+                    _audioService.stopSpeaking();
+                  }
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAudioOption(String label, IconData icon) {
+    return Column(
+      children: [
+        IconButton(
+          icon: Icon(icon, color: AppColors.accentOrange),
+          onPressed: () {
+            if (label == "Off") {
+              _audioService.stopAmbient();
+            } else {
+              _audioService.playAmbient(label);
+            }
+            Navigator.pop(context);
+          },
+        ),
+        Text(label, style: const TextStyle(fontSize: 12)),
+      ],
+    );
   }
 
   void _initializeReader() {
@@ -88,6 +223,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
     if (user == null) return;
 
     await _authService.updateReadingProgress(user.uid, widget.bookId, percent, position);
+    
+    // Record reading session (approx 1 minute per progress update for simplicity)
+    await _authService.recordReadingSession(user.uid, minutes: 1);
 
     if (percent >= 0.99 && !_isCompleted) {
       setState(() {
@@ -239,6 +377,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                               if (_totalChapters > 0) {
                                 percent = (currentChapter / _totalChapters).clamp(0.0, 1.0);
                               }
+                              _calculateReadingVelocity(currentChapter);
                               _updateProgress(percent, cfi);
                             }
                           },
@@ -264,6 +403,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                           _currentPage = page;
                         });
                         final percent = page / (total - 1);
+                        _calculateReadingVelocity(page);
                         _updateProgress(percent, page.toString());
                       }
                     },
@@ -302,17 +442,29 @@ class _ReaderScreenState extends State<ReaderScreen> {
                         },
                       ),
                       Expanded(
-                        child: Text(
-                          widget.bookTitle,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        child: Column(
+                          children: [
+                            Text(
+                              widget.bookTitle,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              _timeToFinish,
+                              style: const TextStyle(color: Colors.white70, fontSize: 11),
+                            ),
+                          ],
                         ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.auto_awesome_rounded, color: AppColors.accentOrange),
+                        onPressed: _getAISummary,
                       ),
                       IconButton(
                         icon: const Icon(Icons.menu_rounded, color: Colors.white),
@@ -384,7 +536,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
                                     });
                                   },
                                 ),
-                                const Text("Text Size", style: TextStyle(color: Colors.white, fontSize: 13)),
                                 IconButton(
                                   icon: const Icon(Icons.format_size_rounded, color: Colors.white, size: 28),
                                   onPressed: () {
@@ -397,6 +548,12 @@ class _ReaderScreenState extends State<ReaderScreen> {
                             )
                           else
                             const SizedBox.shrink(),
+
+                          // Audio Universe Button
+                          IconButton(
+                            icon: const Icon(Icons.headphones_rounded, color: Colors.white),
+                            onPressed: _showAudioMenu,
+                          ),
 
                           // Theme Background selector
                           Row(
@@ -416,6 +573,48 @@ class _ReaderScreenState extends State<ReaderScreen> {
               ),
             ),
           ),
+
+          // AI Summary Overlay
+          if (_isAISummarizing || _aiSummary != null)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () => setState(() => _aiSummary = null),
+                child: Container(
+                  color: Colors.black54,
+                  alignment: Alignment.center,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 32),
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: _themeBgColor,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.auto_awesome_rounded, color: AppColors.accentOrange),
+                            SizedBox(width: 12),
+                            Text("AI Insight", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        if (_isAISummarizing)
+                          const SpinKitThreeBounce(color: AppColors.accentOrange, size: 30)
+                        else
+                          Text(_aiSummary!, style: const TextStyle(fontSize: 14, height: 1.5)),
+                        const SizedBox(height: 16),
+                        TextButton(
+                          onPressed: () => setState(() => _aiSummary = null),
+                          child: const Text("Dismiss"),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
