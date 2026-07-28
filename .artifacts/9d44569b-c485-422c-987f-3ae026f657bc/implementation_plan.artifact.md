@@ -1,48 +1,47 @@
-# Implementation Plan - Universal Expansion Phase 2
+# Implementation Plan - "No More Mocks"
 
-This plan adds advanced utility, accessibility, and deeper gamification to ReadRift, completing the feature set for a world-class reading experience.
+This plan removes all remaining mock data and hardcoded strings, ensuring that every data point in the app is derived from a real source (Firestore, Firebase Storage, or Calculated Logic).
 
 ## User Review Required
 
 > [!IMPORTANT]
-> - **PDF Viewer Upgrade**: I will migrate the PDF reader from `flutter_pdfview` to `syncfusion_flutter_pdfviewer`. This adds robust text selection, native search, and high-performance zooming.
-> - **OpenDyslexic Font**: I will implement the logic for this font. You will need to add `OpenDyslexic-Regular.otf` to the `fonts/` directory for it to be fully functional.
-> - **Search Logic**: For EPUBs, search will jump to the first matching chapter. For PDFs, it will use the native Syncfusion search result jumping.
+> - **Total Reading Time**: I will begin tracking **cumulative reading minutes** in Firestore. Historical data (before this change) won't be available, so everyone will start at 0 hours.
+> - **Notifications**: I will clear the mock notification list. Real notifications will be triggered by events (e.g., Book Synced, Achievement Unlocked).
 
 ## Proposed Changes
 
-### [Component] Advanced PDF Reader
-#### [MODIFY] [reader_screen.dart](file:///C:/Projects/readrift/lib/screens/reader_screen.dart)
-- Replace `PDFView` with `SfPdfViewer.file`.
-- Initialize `PdfViewerController` for programmatic control.
-- Enable text selection and standard interactions.
+### [Component] Persistence & Insights
+#### [MODIFY] [auth_service.dart](file:///C:/Projects/readrift/lib/security/auth_service.dart)
+- Update `recordReadingSession` to increment `totalMinutesRead` globally.
+- Add `getNotificationsStream` and `markNotificationAsRead`.
+- Add `updateUserPreferences` to sync Dark Mode and Notification toggles.
 
-### [Component] In-Book Search
-#### [MODIFY] [reader_screen.dart](file:///C:/Projects/readrift/lib/screens/reader_screen.dart)
-- Add a search icon to the Reader Header.
-- Implement a search overlay that appears when the icon is tapped.
-- **EPUB Search**: Logic to scan `EpubDocument` and jump to the matching chapter.
-- **PDF Search**: Logic to use `SfPdfViewer.searchText` and jump to results.
+### [Component] Real-Time Notifications
+#### [MODIFY] [notifications_screen.dart](file:///C:/Projects/readrift/lib/screens/notifications_screen.dart)
+- Replace hardcoded list with a `StreamBuilder` from Firestore.
+- Add logic to generate a "Book Synced" notification when a file is imported.
 
-### [Component] Yearly Reading Goals
-#### [MODIFY] [auth_service.dart](file:///C:/Projects/readrift/lib/services/auth_service.dart)
-- Add `updateYearlyGoal(int goal)` to update user metadata.
+### [Component] Home & Profile Data
+#### [MODIFY] [home_screen.dart](file:///C:/Projects/readrift/lib/screens/home_screen.dart)
+- Calculate `_getRemainingReadingTime` using the user's calculated reading speed and the `progressPercent` of the active book.
 #### [MODIFY] [profile_screen.dart](file:///C:/Projects/readrift/lib/screens/profile_screen.dart)
-- Add a "2026 Reading Challenge" card.
-- Show a progress bar: (Completed Books / Yearly Goal).
-- Add a dialog to set/edit the yearly goal.
+- Replace mock `readingHours = 158` with a calculated value from `totalMinutesRead`.
 
-### [Component] Accessibility Suite
-#### [MODIFY] [reader_screen.dart](file:///C:/Projects/readrift/lib/screens/reader_screen.dart)
-- **Reading Ruler**: Add a draggable, semi-transparent horizontal bar overlay to help users focus on specific lines.
-- **Font Selection**: Add an option in the "Aa" menu for "OpenDyslexic".
-#### [MODIFY] [theme.dart](file:///C:/Projects/readrift/lib/theme.dart)
-- Register `OpenDyslexic` in the `fonts` section of the `ThemeData` logic (if applicable) or handle it locally in the Reader.
+### [Component] User Settings
+#### [MODIFY] [account_settings_screen.dart](file:///C:/Projects/readrift/lib/screens/account_settings_screen.dart)
+- Connect all toggles (Notifications, Reminders) to Firestore.
+- Remove "Coming soon" toasts for settings that can be implemented now.
+
+### [Component] Audio Assets
+#### [MODIFY] [audio_service.dart](file:///C:/Projects/readrift/lib/services/audio_service.dart)
+- Replace `SoundHelix` placeholder URLs with reliable royalty-free audio sources for Rain, Café, and Focus.
+
+---
 
 ## Verification Plan
 
 ### Manual Verification
-1. **Search**: Open "1984", search for "Winston", and verify the reader jumps to the correct page/chapter.
-2. **PDF Selection**: Long-press text in a PDF and verify the native selection toolbar appears.
-3. **Goals**: Set a goal of 50 books in Profile and verify the progress bar updates correctly.
-4. **Reading Ruler**: Toggle the ruler in the reader and verify it can be moved vertically.
+1. **Notifications**: Import a book and verify a notification appears in the tray.
+2. **Reading Time**: Read for 5 minutes and verify the Profile screen reflects the increase in total reading hours.
+3. **Settings**: Toggle "Reading Reminders" and verify the change persists after an app restart.
+4. **Audio**: Verify ambient sounds play correctly from the new URLs.

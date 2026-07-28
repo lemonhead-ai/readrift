@@ -15,9 +15,6 @@ class AccountSettingsScreen extends StatefulWidget {
 class AccountSettingsScreenState extends State<AccountSettingsScreen> {
   int _selectedIndex = 3;
   final AuthService _authService = AuthService();
-  bool _isDarkMode = false;
-  bool _notificationsEnabled = true;
-  bool _readingRemindersEnabled = true;
 
   void _onNavIconTapped(int index) {
     setState(() {
@@ -25,25 +22,8 @@ class AccountSettingsScreenState extends State<AccountSettingsScreen> {
     });
   }
 
-  void _toggleDarkMode(bool value) {
-    setState(() {
-      _isDarkMode = value;
-    });
-    // In a real app, this would update the app's theme
-  }
-
-  void _toggleNotifications(bool value) {
-    setState(() {
-      _notificationsEnabled = value;
-    });
-    // In a real app, this would update notification settings
-  }
-
-  void _toggleReadingReminders(bool value) {
-    setState(() {
-      _readingRemindersEnabled = value;
-    });
-    // In a real app, this would update reading reminder settings
+  void _togglePreference(String uid, String key, bool value) {
+    _authService.updatePreference(uid, key, value);
   }
 
   @override
@@ -56,94 +36,110 @@ class AccountSettingsScreenState extends State<AccountSettingsScreen> {
       );
     }
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          SafeArea(
-            bottom: false,
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            color:
-                                Theme.of(context).colorScheme.onSurface,
-                          ),
-                          onPressed: () {
-                            context.go('/profile');
-                          },
-                        ),
-                        Text(
-                          'Account Settings',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: _authService.getUserDataStream(user.uid),
+      builder: (context, snapshot) {
+        final userData = snapshot.data?.data() ?? {};
+        final prefs = userData['preferences'] as Map<String, dynamic>? ?? {};
+        
+        final notificationsEnabled = prefs['notifications'] ?? true;
+        final readingRemindersEnabled = prefs['reminders'] ?? true;
+
+        return Scaffold(
+          body: Stack(
+            children: [
+              SafeArea(
+                bottom: false,
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                Icons.arrow_back_ios_new_rounded,
+                                color:
+                                    Theme.of(context).colorScheme.onSurface,
                               ),
+                              onPressed: () {
+                                context.go('/profile');
+                              },
+                            ),
+                            Text(
+                              'Account Settings',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                            const SizedBox(width: 48), // For balance
+                          ],
                         ),
-                        const SizedBox(width: 48), // For balance
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 24),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Profile',
+                              style:
+                                  Theme.of(context).textTheme.titleLarge?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildProfileSection(context, user),
+                            const SizedBox(height: 32),
+                            Text(
+                              'Preferences',
+                              style:
+                                  Theme.of(context).textTheme.titleLarge?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildPreferencesSection(
+                              context, 
+                              user.uid, 
+                              notificationsEnabled, 
+                              readingRemindersEnabled
+                            ),
+                            const SizedBox(height: 32),
+                            Text(
+                              'Account',
+                              style:
+                                  Theme.of(context).textTheme.titleLarge?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildAccountSection(context, user.uid),
+                            const SizedBox(height: 32),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 24),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Profile',
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildProfileSection(context, user),
-                        const SizedBox(height: 32),
-                        Text(
-                          'Preferences',
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildPreferencesSection(context),
-                        const SizedBox(height: 32),
-                        Text(
-                          'Account',
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildAccountSection(context),
-                        const SizedBox(height: 32),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Dock(
+                  selectedIndex: _selectedIndex,
+                  onItemTapped: _onNavIconTapped,
+                ),
+              ),
+            ],
           ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Dock(
-              selectedIndex: _selectedIndex,
-              onItemTapped: _onNavIconTapped,
-            ),
-          ),
-        ],
-      ),
+        );
+      }
     );
   }
 
@@ -169,51 +165,35 @@ class AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     color: Colors.grey,
                   ),
             ),
-            trailing: IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () {
-                // In a real app, this would open an edit profile screen
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Edit profile coming soon!')),
-                );
-              },
-            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPreferencesSection(BuildContext context) {
+  Widget _buildPreferencesSection(BuildContext context, String uid, bool notifications, bool reminders) {
     return Card(
       child: Column(
         children: [
           SwitchListTile(
-            title: const Text('Dark Mode'),
-            subtitle: const Text('Enable dark theme'),
-            value: _isDarkMode,
-            onChanged: _toggleDarkMode,
-          ),
-          const Divider(),
-          SwitchListTile(
             title: const Text('Notifications'),
             subtitle: const Text('Receive app notifications'),
-            value: _notificationsEnabled,
-            onChanged: _toggleNotifications,
+            value: notifications,
+            onChanged: (val) => _togglePreference(uid, 'notifications', val),
           ),
           const Divider(),
           SwitchListTile(
             title: const Text('Reading Reminders'),
             subtitle: const Text('Get daily reading reminders'),
-            value: _readingRemindersEnabled,
-            onChanged: _toggleReadingReminders,
+            value: reminders,
+            onChanged: (val) => _togglePreference(uid, 'reminders', val),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAccountSection(BuildContext context) {
+  Widget _buildAccountSection(BuildContext context, String uid) {
     return Card(
       child: Column(
         children: [
@@ -244,14 +224,10 @@ class AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       child: const Text('Cancel'),
                     ),
                     TextButton(
-                      onPressed: () {
-                        // In a real app, this would delete the user's account
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Account deletion coming soon!'),
-                          ),
-                        );
+                      onPressed: () async {
+                        // In a real app, this would delete the user's data and account
+                        await _authService.signOut();
+                        if (mounted) Navigator.pop(context);
                       },
                       child: const Text(
                         'Delete',

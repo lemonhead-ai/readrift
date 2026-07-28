@@ -151,7 +151,8 @@ class ProfileScreenState extends State<ProfileScreen> {
                 final totalBooks = books.length;
                 final completedBooks =
                     books.where((b) => b['isCompleted'] == true).length;
-                final readingHours = 158;
+                final totalMinutes = userData['totalMinutesRead'] ?? 0;
+                final readingHours = (totalMinutes / 60).toStringAsFixed(1);
 
                 final textColor = Theme.of(context).colorScheme.onSurface;
 

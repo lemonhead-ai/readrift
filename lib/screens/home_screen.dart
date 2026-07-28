@@ -133,8 +133,17 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  String _getRemainingReadingTime() {
-    return "5 hrs";
+  String _getRemainingReadingTime(double progressPercent, int totalPages) {
+    if (progressPercent <= 0 || progressPercent >= 0.99) return "5 hrs";
+    
+    // Simple estimation based on typical reading speed if session data is thin
+    final pagesRemaining = totalPages * (1 - progressPercent);
+    final minutesRemaining = pagesRemaining * 1.5; // Average 1.5 mins per page
+    
+    if (minutesRemaining > 60) {
+      return "${(minutesRemaining / 60).toStringAsFixed(1)} hrs";
+    }
+    return "${minutesRemaining.toInt()} mins";
   }
 
   @override

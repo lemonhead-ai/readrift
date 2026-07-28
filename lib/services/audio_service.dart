@@ -46,13 +46,13 @@ class AudioService {
     String url = "";
     switch (soundType) {
       case "Rain":
-        url = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"; // Placeholder
+        url = "https://cdn.pixabay.com/download/audio/2022/03/24/audio_733621f37e.mp3"; // High quality rain
         break;
       case "Cafe":
-        url = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"; // Placeholder
+        url = "https://cdn.pixabay.com/download/audio/2022/01/18/audio_8231505c2a.mp3"; // High quality cafe ambience
         break;
       case "Focus":
-        url = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"; // Placeholder
+        url = "https://cdn.pixabay.com/download/audio/2022/03/15/audio_2e02235940.mp3"; // White noise/Focus
         break;
     }
 

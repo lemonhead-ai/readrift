@@ -76,6 +76,13 @@ class LibraryScreenState extends State<LibraryScreen> {
 
         await _authService.addBookToLibrary(user.uid, bookMetadata);
 
+        // Add real notification
+        await _authService.addNotification(user.uid, {
+          'title': 'New Galaxy Added',
+          'message': "Successfully synced '$title' to your universe.",
+          'type': 'book_available',
+        });
+
         if (!mounted) return;
         ToastService.showSuccess(context, "Imported and Synced '$title' successfully!");
       }

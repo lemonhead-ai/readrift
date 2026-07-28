@@ -277,9 +277,12 @@ class AuthService {
           : null;
       int currentStreak = data['streakCount'] ?? 0;
       int minutesToday = data['minutesReadToday'] ?? 0;
+      int totalMinutes = data['totalMinutesRead'] ?? 0;
       
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
+
+      totalMinutes += minutes;
 
       if (lastRead == null) {
         currentStreak = 1;
@@ -306,6 +309,7 @@ class AuthService {
         'lastReadDate': FieldValue.serverTimestamp(),
         'streakCount': currentStreak,
         'minutesReadToday': minutesToday,
+        'totalMinutesRead': totalMinutes,
       });
     });
   }
@@ -313,6 +317,59 @@ class AuthService {
   Future<void> updateYearlyGoal(String uid, int goal) async {
     await _firestore.collection('users').doc(uid).update({
       'yearlyGoal': goal,
+    });
+  }
+
+  // --- Notification System ---
+  Stream<QuerySnapshot<Map<String, dynamic>>> getNotificationsStream(String uid) {
+    return _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('notifications')
+        .orderBy('timestamp', descending: true)
+        .snapshots();
+  }
+
+  Future<void> addNotification(String uid, Map<String, dynamic> notification) async {
+    await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('notifications')
+        .add({
+          ...notification,
+          'timestamp': FieldValue.serverTimestamp(),
+          'isRead': false,
+        });
+  }
+
+  Future<void> markNotificationAsRead(String uid, String notificationId) async {
+    await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('notifications')
+        .doc(notificationId)
+        .update({'isRead': true});
+  }
+
+  Future<void> markAllNotificationsAsRead(String uid) async {
+    final batch = _firestore.batch();
+    final notifications = await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('notifications')
+        .where('isRead', isEqualTo: false)
+        .get();
+
+    for (var doc in notifications.docs) {
+      batch.update(doc.reference, {'isRead': true});
+    }
+    await batch.commit();
+  }
+
+  // --- User Preferences ---
+  Future<void> updatePreference(String uid, String key, dynamic value) async {
+    await _firestore.collection('users').doc(uid).update({
+      'preferences.$key': value,
     });
   }
 }
