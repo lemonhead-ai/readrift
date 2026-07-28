@@ -141,6 +141,7 @@ class ProfileScreenState extends State<ProfileScreen> {
             final userData = snapshot.data!.data()!;
             final username = userData['username'] ?? "User";
             final photoUrl = authUser.photoURL;
+            final int yearlyGoal = userData['yearlyGoal'] ?? 12;
 
             return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
               stream: _authService.getUserLibraryStream(authUser.uid),
@@ -267,6 +268,9 @@ class ProfileScreenState extends State<ProfileScreen> {
                           _buildThemeSelector(context),
                           const SizedBox(height: 20),
 
+                          _buildReadingChallenge(context, completedBooks, yearlyGoal, authUser.uid),
+                          const SizedBox(height: 20),
+
                           _buildOptionTile(
                             context,
                             icon: Icons.notifications_active_rounded,
@@ -388,6 +392,127 @@ class ProfileScreenState extends State<ProfileScreen> {
           },
         );
       },
+    );
+  }
+
+  Widget _buildReadingChallenge(BuildContext context, int completed, int goal, String uid) {
+    final progress = (completed / goal).clamp(0.0, 1.0);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return BouncyTap(
+      onTap: () => _showSetGoalDialog(context, uid, goal),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppColors.accentOrange, AppColors.accentOrange.withValues(alpha: 0.8)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.accentOrange.withValues(alpha: 0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "2026 Reading Challenge",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Icon(Icons.stars_rounded, color: Colors.white.withValues(alpha: 0.8)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "$completed of $goal books read",
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                ),
+                Text(
+                  "${(progress * 100).toInt()}%",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: LinearProgressIndicator(
+                value: progress,
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                minHeight: 10,
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              "Tap to adjust your yearly goal",
+              style: TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showSetGoalDialog(BuildContext context, String uid, int currentGoal) {
+    final TextEditingController controller = TextEditingController(text: currentGoal.toString());
+    showAdaptiveDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Set Yearly Goal"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text("How many books do you want to read in 2026?"),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: "Number of books",
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final val = int.tryParse(controller.text);
+              if (val != null && val > 0) {
+                _authService.updateYearlyGoal(uid, val);
+                Navigator.pop(context);
+              }
+            },
+            child: const Text("Set Goal"),
+          ),
+        ],
+      ),
     );
   }
 

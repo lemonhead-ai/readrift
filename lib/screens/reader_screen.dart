@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:epub_view/epub_view.dart';
-import 'package:flutter_pdfview/flutter_pdfview.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:go_router/go_router.dart';
 import 'package:readrift/security/auth_service.dart';
 import 'package:readrift/theme.dart';
@@ -32,6 +32,8 @@ class ReaderScreen extends StatefulWidget {
 
 class _ReaderScreenState extends State<ReaderScreen> {
   EpubController? _epubReaderController;
+  PdfViewerController? _pdfViewerController;
+  PdfTextSearchResult? _pdfSearchResult;
   final AuthService _authService = AuthService();
   final AIService _aiService = AIService();
   final AudioService _audioService = AudioService();
@@ -50,6 +52,19 @@ class _ReaderScreenState extends State<ReaderScreen> {
   String _timeToFinish = "Calculating...";
   bool _isAISummarizing = false;
   String? _aiSummary;
+
+  // Search State
+  bool _isSearchVisible = false;
+  final TextEditingController _searchController = TextEditingController();
+  int _currentSearchIndex = 0;
+  int _totalSearchCount = 0;
+
+  // Accessibility: Reading Ruler
+  bool _isRulerEnabled = false;
+  double _rulerPosition = 300.0;
+  
+  // Font State
+  String _currentFont = "Poppins";
 
   @override
   void initState() {
@@ -140,6 +155,19 @@ class _ReaderScreenState extends State<ReaderScreen> {
             ),
             const Divider(height: 40),
             ListTile(
+              leading: const Icon(Icons.linear_scale_rounded, color: AppColors.accentOrange),
+              title: const Text("Reading Ruler"),
+              subtitle: const Text("Draggable guide for line focus"),
+              trailing: Switch(
+                value: _isRulerEnabled,
+                onChanged: (val) {
+                  setState(() => _isRulerEnabled = val);
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+            const Divider(height: 20),
+            ListTile(
               leading: const Icon(Icons.record_voice_over_rounded, color: AppColors.accentOrange),
               title: const Text("Audiobook Mode (TTS)"),
               subtitle: const Text("Listen to the current page"),
@@ -185,6 +213,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
       _epubReaderController = EpubController(
         document: EpubDocument.openFile(File(widget.filePath)),
       );
+    } else if (widget.fileType == 'pdf') {
+      _pdfViewerController = PdfViewerController();
     }
   }
 
@@ -333,9 +363,50 @@ class _ReaderScreenState extends State<ReaderScreen> {
     });
   }
 
+  void _toggleSearch() {
+    setState(() {
+      _isSearchVisible = !_isSearchVisible;
+      if (!_isSearchVisible) {
+        _searchController.clear();
+        _pdfSearchResult?.clear();
+        _totalSearchCount = 0;
+      }
+    });
+  }
+
+  void _performSearch(String query) {
+    if (query.isEmpty) return;
+
+    if (widget.fileType == 'pdf') {
+      _pdfSearchResult = _pdfViewerController?.searchText(query);
+      _pdfSearchResult?.addListener(() {
+        if (mounted) {
+          setState(() {
+            _totalSearchCount = _pdfSearchResult?.totalInstanceCount ?? 0;
+          });
+        }
+      });
+    } else if (widget.fileType == 'epub') {
+      // Basic EPUB search: find first chapter containing text
+      // In a production app, we'd use a more sophisticated indexing.
+      final chapters = _epubReaderController?.document.value?.Chapters;
+      if (chapters != null) {
+        for (int i = 0; i < chapters.length; i++) {
+          if (chapters[i].HtmlContent?.toLowerCase().contains(query.toLowerCase()) ?? false) {
+             _epubReaderController?.scrollTo(index: i);
+             ToastService.showInfo(context, "Jumped to first occurrence in Chapter ${i+1}");
+             break;
+          }
+        }
+      }
+    }
+  }
+
   @override
   void dispose() {
     _epubReaderController?.dispose();
+    _pdfViewerController?.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -361,6 +432,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                               ? Brightness.dark
                               : Brightness.light,
                           scaffoldBackgroundColor: _themeBgColor,
+                          fontFamily: _currentFont,
                         ),
                         child: EpubView(
                           controller: _epubReaderController!,
@@ -368,6 +440,16 @@ class _ReaderScreenState extends State<ReaderScreen> {
                             _totalChapters = document.Chapters?.length ?? 1;
                             _chapters = document.Chapters;
                             _loadSavedProgress();
+                          },
+                          builder: (context, controller, child) {
+                            return EpubView(
+                              controller: controller,
+                              onDocumentLoaded: (document) {
+                                _totalChapters = document.Chapters?.length ?? 1;
+                                _chapters = document.Chapters;
+                                _loadSavedProgress();
+                              },
+                            );
                           },
                           onChapterChanged: (value) {
                             if (value != null) {
@@ -385,30 +467,54 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       ),
                     )
                   )
-                : PDFView(
-                    filePath: widget.filePath,
-                    enableSwipe: true,
-                    swipeHorizontal: true,
-                    autoSpacing: true,
-                    pageSnap: true,
-                    onRender: (pages) {
+                : SfPdfViewer.file(
+                    File(widget.filePath),
+                    controller: _pdfViewerController,
+                    onDocumentLoaded: (details) {
                       setState(() {
-                        _totalPages = pages ?? 0;
+                        _totalPages = details.document.pages.count;
                       });
                       _loadSavedProgress();
                     },
-                    onPageChanged: (page, total) {
-                      if (page != null && total != null && total > 0) {
-                        setState(() {
-                          _currentPage = page;
-                        });
-                        final percent = page / (total - 1);
-                        _calculateReadingVelocity(page);
-                        _updateProgress(percent, page.toString());
-                      }
+                    onPageChanged: (details) {
+                      setState(() {
+                        _currentPage = details.newPageNumber - 1;
+                      });
+                      final percent = (details.newPageNumber - 1) / (_totalPages - 1);
+                      _calculateReadingVelocity(details.newPageNumber - 1);
+                      _updateProgress(percent, (details.newPageNumber - 1).toString());
                     },
                   ),
           ),
+
+          // Reading Ruler
+          if (_isRulerEnabled)
+            Positioned(
+              top: _rulerPosition,
+              left: 0,
+              right: 0,
+              child: GestureDetector(
+                onVerticalDragUpdate: (details) {
+                  setState(() {
+                    _rulerPosition += details.delta.dy;
+                  });
+                },
+                child: Container(
+                  height: 40,
+                  color: AppColors.accentOrange.withValues(alpha: 0.3),
+                  child: Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
 
           // Floating Glass controls header (Top Bar)
           AnimatedPositioned(
@@ -467,6 +573,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
                         onPressed: _getAISummary,
                       ),
                       IconButton(
+                        icon: Icon(_isSearchVisible ? Icons.close_rounded : Icons.search_rounded, color: Colors.white),
+                        onPressed: _toggleSearch,
+                      ),
+                      IconButton(
                         icon: const Icon(Icons.menu_rounded, color: Colors.white),
                         onPressed: _showTableOfContents,
                       ),
@@ -476,6 +586,55 @@ class _ReaderScreenState extends State<ReaderScreen> {
               ),
             ),
           ),
+
+          // In-Book Search Bar
+          if (_isSearchVisible)
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 250),
+              top: _isControlOverlayVisible ? 100 : 0,
+              left: 0,
+              right: 0,
+              child: ClipRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    color: Colors.black.withValues(alpha: 0.4),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: InputDecoration(
+                              hintText: "Search in book...",
+                              hintStyle: const TextStyle(color: Colors.white54),
+                              border: InputBorder.none,
+                              prefixIcon: const Icon(Icons.search, color: Colors.white54),
+                            ),
+                            onSubmitted: _performSearch,
+                          ),
+                        ),
+                        if (widget.fileType == 'pdf' && _totalSearchCount > 0) ...[
+                          Text(
+                            "${_pdfSearchResult?.currentInstanceIndex ?? 0}/${_totalSearchCount}",
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.keyboard_arrow_up, color: Colors.white),
+                            onPressed: () => _pdfSearchResult?.previousInstance(),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
+                            onPressed: () => _pdfSearchResult?.nextInstance(),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
 
           // Floating Glass controls footer (Bottom Bar)
           AnimatedPositioned(
@@ -524,7 +683,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Font Size controls (only for EPUB text scaling)
+                          // Font Size & Type controls
                           if (widget.fileType == 'epub')
                             Row(
                               children: [
@@ -544,6 +703,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
                                     });
                                   },
                                 ),
+                                const SizedBox(width: 8),
+                                _buildFontButton("Sans", "Poppins"),
+                                const SizedBox(width: 4),
+                                _buildFontButton("Dyslexic", "OpenDyslexic"),
                               ],
                             )
                           else
@@ -616,6 +779,28 @@ class _ReaderScreenState extends State<ReaderScreen> {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFontButton(String label, String fontFamily) {
+    final isSelected = _currentFont == fontFamily;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _currentFont = fontFamily;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.accentOrange : Colors.white10,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(color: Colors.white, fontSize: 11),
+        ),
       ),
     );
   }

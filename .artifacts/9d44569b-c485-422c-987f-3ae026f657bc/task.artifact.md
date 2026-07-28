@@ -1,8 +1,7 @@
-# Task List - Streak Polish & AI Refinement
+# Task List - Universal Expansion Phase 2
 
-- [x] Add dependencies (`share_plus`, `screenshot`) to `pubspec.yaml`
-- [x] Implement Streak logic in `AuthService`
-- [x] Create `UniverseShareCard` widget
-- [x] Refine AI prompts in `AIService`
-- [x] Integrate Streak & Sharing in `HomeScreen`
+- [x] Upgrade PDF Viewer to `syncfusion_flutter_pdfviewer`
+- [x] Implement In-Book Search (EPUB & PDF)
+- [x] Implement Yearly Reading Goals (AuthService & Profile)
+- [x] Add Accessibility Suite (Reading Ruler & Font Support)
 - [x] Verification & Final Walkthrough

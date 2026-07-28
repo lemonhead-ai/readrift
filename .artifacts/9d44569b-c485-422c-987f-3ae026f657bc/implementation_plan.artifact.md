@@ -1,46 +1,48 @@
-# Implementation Plan - Streak Polish & AI Refinement
+# Implementation Plan - Universal Expansion Phase 2
 
-This plan focuses on making the Reading Streak real, adding a high-end sharing feature, and refining the AI's "voice" to match the ReadRift universe.
+This plan adds advanced utility, accessibility, and deeper gamification to ReadRift, completing the feature set for a world-class reading experience.
 
 ## User Review Required
 
 > [!IMPORTANT]
-> - **New Dependencies**: I will add `share_plus` and `screenshot` to `pubspec.yaml` to enable the "Universe Card" sharing feature.
-> - **Streak Logic**: I will implement a "soft streak" where a user has a 24-hour grace period to maintain their streak.
+> - **PDF Viewer Upgrade**: I will migrate the PDF reader from `flutter_pdfview` to `syncfusion_flutter_pdfviewer`. This adds robust text selection, native search, and high-performance zooming.
+> - **OpenDyslexic Font**: I will implement the logic for this font. You will need to add `OpenDyslexic-Regular.otf` to the `fonts/` directory for it to be fully functional.
+> - **Search Logic**: For EPUBs, search will jump to the first matching chapter. For PDFs, it will use the native Syncfusion search result jumping.
 
 ## Proposed Changes
 
-### [Component] Persistence & Streak Logic
-#### [MODIFY] [auth_service.dart](file:///C:/Projects/readrift/lib/security/auth_service.dart)
-- Add `updateStreak` method to handle incrementing/resetting streaks in Firestore.
-- Add `lastReadTimestamp` and `streakCount` to user metadata.
+### [Component] Advanced PDF Reader
+#### [MODIFY] [reader_screen.dart](file:///C:/Projects/readrift/lib/screens/reader_screen.dart)
+- Replace `PDFView` with `SfPdfViewer.file`.
+- Initialize `PdfViewerController` for programmatic control.
+- Enable text selection and standard interactions.
 
-### [Component] UI: Universe Streak Card
-#### [NEW] [universe_share_card.dart](file:///C:/Projects/readrift/lib/widgets/universe_share_card.dart)
-- A specialized Glassmorphism widget designed for social sharing.
-- Displays the user's streak, active book, and a generated "Reading Persona" (e.g., "Universal Voyager").
-#### [MODIFY] [home_screen.dart](file:///C:/Projects/readrift/lib/screens/home_screen.dart)
-- Integrate a "Share" icon into the `DailyGoalWidget`.
-- Connect the real streak data from Firestore.
+### [Component] In-Book Search
+#### [MODIFY] [reader_screen.dart](file:///C:/Projects/readrift/lib/screens/reader_screen.dart)
+- Add a search icon to the Reader Header.
+- Implement a search overlay that appears when the icon is tapped.
+- **EPUB Search**: Logic to scan `EpubDocument` and jump to the matching chapter.
+- **PDF Search**: Logic to use `SfPdfViewer.searchText` and jump to results.
 
-### [Component] AI "Universe" Refinement
-#### [MODIFY] [ai_service.dart](file:///C:/Projects/readrift/lib/services/ai_service.dart)
-- Update prompts to use a "Universal Librarian" persona.
-- Add a `getPreviouslyIn` method for chapter-by-chapter summaries.
+### [Component] Yearly Reading Goals
+#### [MODIFY] [auth_service.dart](file:///C:/Projects/readrift/lib/services/auth_service.dart)
+- Add `updateYearlyGoal(int goal)` to update user metadata.
+#### [MODIFY] [profile_screen.dart](file:///C:/Projects/readrift/lib/screens/profile_screen.dart)
+- Add a "2026 Reading Challenge" card.
+- Show a progress bar: (Completed Books / Yearly Goal).
+- Add a dialog to set/edit the yearly goal.
 
-### [Component] Dependencies
-#### [MODIFY] [pubspec.yaml](file:///C:/Projects/readrift/pubspec.yaml)
-- Add `share_plus: ^10.0.0`
-- Add `screenshot: ^3.0.0`
-
----
+### [Component] Accessibility Suite
+#### [MODIFY] [reader_screen.dart](file:///C:/Projects/readrift/lib/screens/reader_screen.dart)
+- **Reading Ruler**: Add a draggable, semi-transparent horizontal bar overlay to help users focus on specific lines.
+- **Font Selection**: Add an option in the "Aa" menu for "OpenDyslexic".
+#### [MODIFY] [theme.dart](file:///C:/Projects/readrift/lib/theme.dart)
+- Register `OpenDyslexic` in the `fonts` section of the `ThemeData` logic (if applicable) or handle it locally in the Reader.
 
 ## Verification Plan
 
-### Automated Tests
-- Unit tests for streak calculation (yesterday vs today).
-
 ### Manual Verification
-- **Sharing**: Trigger the "Universe Card" and verify the screenshot is generated and the share sheet opens.
-- **Streak**: Simulate a "last read" date of yesterday and verify the streak increments today.
-- **AI**: Verify the new poetic summary style.
+1. **Search**: Open "1984", search for "Winston", and verify the reader jumps to the correct page/chapter.
+2. **PDF Selection**: Long-press text in a PDF and verify the native selection toolbar appears.
+3. **Goals**: Set a goal of 50 books in Profile and verify the progress bar updates correctly.
+4. **Reading Ruler**: Toggle the ruler in the reader and verify it can be moved vertically.

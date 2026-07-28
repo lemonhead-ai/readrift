@@ -309,5 +309,11 @@ class AuthService {
       });
     });
   }
+
+  Future<void> updateYearlyGoal(String uid, int goal) async {
+    await _firestore.collection('users').doc(uid).update({
+      'yearlyGoal': goal,
+    });
+  }
 }
 

@@ -1,35 +1,39 @@
-# ReadRift Streak Polish & AI Refinement Walkthrough
+# ReadRift Universal Expansion Phase 2 Walkthrough
 
-The ReadRift universe is now more social, persistent, and poetic.
+The ReadRift experience has been upgraded with advanced utility, professional document handling, and accessibility features.
 
 ## Key Enhancements
 
-### 1. Real Reading Streaks & Goals
-- **Persistence**: Replaced mock streak data with a robust Firestore-backed system in `AuthService`.
-- **Engagement**: Added `recordReadingSession` which tracks daily minutes read and maintains a streak counter with automatic resets if a day is missed.
-- **Dynamic Home**: The `DailyGoalWidget` on the Home screen now reflects the user's real-time progress and streak.
+### 1. Professional PDF Reader
+- **[SfPdfViewer Integration](file:///C:/Projects/readrift/lib/screens/reader_screen.dart)**: Migrated from a basic PDF viewer to `syncfusion_flutter_pdfviewer`.
+- **Advanced Controls**: Users now have access to high-performance zooming, native text selection, and smooth scrolling.
+- **Search Support**: Native PDF search is fully integrated with a "Previous/Next" navigation UI.
 
-### 2. Universe Share Cards
-- **[Universe Share Card](file:///C:/Projects/readrift/lib/widgets/universe_share_card.dart)**: Created a beautiful, Glassmorphism-styled card that captures the user's reading persona (e.g., "Nebula Reader").
-- **Social Sharing**: Integrated `screenshot` and `share_plus` so users can export these cards as high-quality images to share their progress with the world.
+### 2. In-Book Search (EPUB & PDF)
+- **Unified Search UI**: A new sleek search bar appears in the reader header.
+- **EPUB Search**: Logic implemented to scan chapters and jump to the first matching section.
+- **PDF Search**: Direct integration with the Syncfusion search engine for instance-level jumping.
 
-### 3. Poetic AI Refinement
-- **[Universal Librarian](file:///C:/Projects/readrift/lib/services/ai_service.dart)**: Refined the Gemini AI prompts. The AI now speaks in the voice of a "Universal Librarian," providing summaries that feel like "ancient star-maps being revealed."
-- **Immersive Feedback**: Updated error messages to maintain the theme (e.g., "The connection to the character's star-thread was lost").
+### 3. Yearly Reading Challenge
+- **[Reading Challenge Card](file:///C:/Projects/readrift/lib/screens/profile_screen.dart)**: A beautiful new progress card in the Profile screen.
+- **Goal Setting**: Users can set a yearly goal (e.g., "50 books in 2026") and track their progress via a dynamic progress bar.
+- **Firestore Persistence**: Goals are saved globally and follow the user across devices.
+
+### 4. Accessibility Suite
+- **Reading Ruler**: A draggable focus bar helps readers with ADHD or dyslexia maintain focus on the current line. It can be toggled in the Audio/Focus menu.
+- **OpenDyslexic Support**: Added a font toggle in the reader settings to switch between Poppins and OpenDyslexic.
 
 ---
 
-## Technical Details
+## 🛠️ Important Setup Note
 
-> [!TIP]
-> Users can trigger a share card by tapping the share icon in the **Daily Goal** section on the Home Screen.
-
-> [!IMPORTANT]
-> The streak logic includes a daily reset. If a user doesn't record a reading session for a full calendar day, their streak will return to 1 upon their next session.
+> [!CAUTION]
+> **OpenDyslexic Font**: The logic is implemented, but you must add the `OpenDyslexic-Regular.otf` file to your `fonts/` directory and register it in `pubspec.yaml` for the font toggle to render correctly.
 
 ---
 
 ## Verification Results
-- **Streak Logic**: Verified that `minutesReadToday` and `streakCount` update correctly in Firestore during reading sessions.
-- **Sharing**: Verified that the share sheet opens with the correctly generated `universe_streak.png` image.
-- **AI Tone**: Confirmed the new poetic summaries via the "AI Insight" overlay in the reader.
+- **PDF Viewer**: Smooth loading and interaction verified.
+- **Search**: Search results correctly jump to positions in both file formats.
+- **Goals**: The Set Goal dialog correctly updates the Firestore document and UI.
+- **Ruler**: The ruler appears and is draggable vertically across the screen.
