@@ -398,7 +398,6 @@ class ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildReadingChallenge(BuildContext context, int completed, int goal, String uid) {
     final progress = (completed / goal).clamp(0.0, 1.0);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return BouncyTap(
       onTap: () => _showSetGoalDialog(context, uid, goal),

@@ -14,13 +14,13 @@ class BookService {
         final data = json.decode(response.body);
         return (data['docs'] as List).map((json) => Book.fromJson({'docs': [json]})).toList();
       } else {
-        if (context != null) {
+        if (context != null && context.mounted) {
           ToastService.showError(context, 'Sorry, we couldn\'t search for books right now. Please try again.');
         }
         return [];
       }
     } catch (e) {
-      if (context != null) {
+      if (context != null && context.mounted) {
         ToastService.showError(context, 'Please check your internet connection and try again.');
       }
       return [];
@@ -36,13 +36,13 @@ class BookService {
         final works = data['works'] as List;
         return works.map((work) => Book.fromJson(work)).toList();
       } else {
-        if (context != null) {
+        if (context != null && context.mounted) {
           ToastService.showWarning(context, 'We couldn\'t load recommendations right now');
         }
         return [];
       }
     } catch (e) {
-      if (context != null) {
+      if (context != null && context.mounted) {
         ToastService.showWarning(context, 'Unable to load recommendations at the moment');
       }
       return [];
@@ -55,13 +55,13 @@ class BookService {
       if (response.statusCode == 200) {
         return Book.fromJson(json.decode(response.body));
       } else {
-        if (context != null) {
+        if (context != null && context.mounted) {
           ToastService.showError(context, 'Sorry, we couldn\'t load the book details');
         }
         return null;
       }
     } catch (e) {
-        if (context != null) {
+        if (context != null && context.mounted) {
           ToastService.showError(context, 'Please check your connection and try again');
         }
         return null;

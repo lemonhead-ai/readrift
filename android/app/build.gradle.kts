@@ -10,7 +10,7 @@ plugins {
 
 android {
     namespace = "com.example.elevens"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -24,7 +24,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.elevens"
-        minSdk = 23 // Updated to 23 to meet Firebase requirements
+        minSdk = 24 // Updated to 24 to meet flutter_tts plugin requirements
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

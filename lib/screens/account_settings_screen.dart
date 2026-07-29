@@ -1,5 +1,6 @@
 import 'package:readrift/security/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:readrift/screens/dock.dart';
@@ -213,21 +214,23 @@ class AccountSettingsScreenState extends State<AccountSettingsScreen> {
             onTap: () {
               showDialog(
                 context: context,
-                builder: (context) => AlertDialog(
+                builder: (dialogContext) => AlertDialog(
                   title: const Text('Delete Account'),
                   content: const Text(
                     'Are you sure you want to delete your account? This action cannot be undone.',
                   ),
                   actions: [
                     TextButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => Navigator.pop(dialogContext),
                       child: const Text('Cancel'),
                     ),
                     TextButton(
                       onPressed: () async {
                         // In a real app, this would delete the user's data and account
+                        final navigator = Navigator.of(dialogContext);
                         await _authService.signOut();
-                        if (mounted) Navigator.pop(context);
+                        if (!dialogContext.mounted) return;
+                        navigator.pop();
                       },
                       child: const Text(
                         'Delete',

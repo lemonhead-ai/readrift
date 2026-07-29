@@ -461,7 +461,10 @@ class HomeScreenState extends State<HomeScreen> {
                                                     FontWeight.bold),
                                       ),
                                       TextSpan(
-                                        text: _getRemainingReadingTime(),
+                                        text: _getRemainingReadingTime(
+                                          (activeBook?['progressPercent'] ?? 0.0).toDouble(),
+                                          activeBook?['totalPages'] ?? 200,
+                                        ),
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodyLarge

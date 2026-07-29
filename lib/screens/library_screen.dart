@@ -50,6 +50,7 @@ class LibraryScreenState extends State<LibraryScreen> {
         await file.copy(localFile.path);
 
         // 2. Upload to Firebase Storage for Cloud Sync
+        if (!mounted) return;
         ToastService.showInfo(context, "Syncing '$title' to your universe...");
         final storageRef = FirebaseStorage.instance
             .ref()

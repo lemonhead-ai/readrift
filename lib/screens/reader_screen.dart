@@ -56,7 +56,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
   // Search State
   bool _isSearchVisible = false;
   final TextEditingController _searchController = TextEditingController();
-  int _currentSearchIndex = 0;
   int _totalSearchCount = 0;
 
   // Accessibility: Reading Ruler
@@ -125,7 +124,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
       setState(() {
         _isAISummarizing = false;
       });
-      ToastService.showError(context, "AI Summary failed.");
+      if (mounted) {
+        ToastService.showError(context, "AI Summary failed.");
+      }
     }
   }
 
@@ -389,12 +390,14 @@ class _ReaderScreenState extends State<ReaderScreen> {
     } else if (widget.fileType == 'epub') {
       // Basic EPUB search: find first chapter containing text
       // In a production app, we'd use a more sophisticated indexing.
-      final chapters = _epubReaderController?.document.value?.Chapters;
+      final chapters = _chapters;
       if (chapters != null) {
         for (int i = 0; i < chapters.length; i++) {
           if (chapters[i].HtmlContent?.toLowerCase().contains(query.toLowerCase()) ?? false) {
              _epubReaderController?.scrollTo(index: i);
-             ToastService.showInfo(context, "Jumped to first occurrence in Chapter ${i+1}");
+             if (mounted) {
+               ToastService.showInfo(context, "Jumped to first occurrence in Chapter ${i+1}");
+             }
              break;
           }
         }
@@ -440,16 +443,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
                             _totalChapters = document.Chapters?.length ?? 1;
                             _chapters = document.Chapters;
                             _loadSavedProgress();
-                          },
-                          builder: (context, controller, child) {
-                            return EpubView(
-                              controller: controller,
-                              onDocumentLoaded: (document) {
-                                _totalChapters = document.Chapters?.length ?? 1;
-                                _chapters = document.Chapters;
-                                _loadSavedProgress();
-                              },
-                            );
                           },
                           onChapterChanged: (value) {
                             if (value != null) {
@@ -617,7 +610,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                         ),
                         if (widget.fileType == 'pdf' && _totalSearchCount > 0) ...[
                           Text(
-                            "${_pdfSearchResult?.currentInstanceIndex ?? 0}/${_totalSearchCount}",
+                            "${_pdfSearchResult?.currentInstanceIndex ?? 0}/$_totalSearchCount",
                             style: const TextStyle(color: Colors.white),
                           ),
                           IconButton(
